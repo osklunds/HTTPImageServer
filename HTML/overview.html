@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+* {
+  box-sizing: border-box;
+}
+
+.column {
+  float: left;
+  width: 33.33%;
+  padding: 5px;
+}
+
+/* Clearfix (clear floats) */
+.row::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.image_container {
+  cursor: pointer;
+}
+
+.image {
+  object-fit: cover;
+  aspect-ratio: 1/1;
+  width: 100%;
+}
+
+</style>
+</head>
+<body>
+
+<h2>MyPath</h2>
+
+<div class="row">
+  <div class="column">
+    <div class="image_container" onclick="window.location='bild1_full.html';">
+      <img class="image" src="bild1.jpg" width="100%">
+    </div>
+  </div>
+  <div class="column">
+    <img class="image" src="bild2.jpg">
+  </div>
+  <div class="column">
+    <img class="image" src="bild3.jpg">
+  </div>
+  <div class="column">
+    <img class="image" src="bild4.png">
+  </div>
+  <div class="column">
+    <img class="image" src="bild1.jpg">
+  </div>
+  <div class="column">
+    <img class="image" src="bild2.jpg">
+  </div>
+</div>
+
+</body>
+</html>
