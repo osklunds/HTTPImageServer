@@ -9,10 +9,12 @@
 .column {
   float: left;
   width: 33.33%;
-  padding: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-top: 5px;
+  padding-bottom: : 5px;
 }
 
-/* Clearfix (clear floats) */
 .row::after {
   content: "";
   clear: both;
@@ -29,32 +31,56 @@
   width: 100%;
 }
 
+.button_top {
+  background-color: lightgray;
+  width: 100%;
+  padding: 10px;
+  font-family: Helvetica, sans-serif;
+}
+
 </style>
 </head>
 <body>
 
-<h2>MyPath</h2>
+<div class="button_top" height="20px" onclick="window.location='bild1_full.html'">
+  hej
+</div>
 
 <div class="row">
   <div class="column">
     <div class="image_container" onclick="window.location='bild1_full.html';">
-      <img class="image" src="bild1.jpg" width="100%">
+      <img class="image" src="../Images/img1.png" width="100%">
     </div>
   </div>
+
   <div class="column">
-    <img class="image" src="bild2.jpg">
+    <div class="image_container" onclick="window.location='bild1_full.html';">
+      <img class="image" src="../Images/img1.png" width="100%">
+    </div>
   </div>
+
   <div class="column">
-    <img class="image" src="bild3.jpg">
+    <div class="image_container" onclick="window.location='bild1_full.html';">
+      <img class="image" src="../Images/img1.png" width="100%">
+    </div>
   </div>
+
   <div class="column">
-    <img class="image" src="bild4.png">
+    <div class="image_container" onclick="window.location='bild1_full.html';">
+      <img class="image" src="../Images/img1.png" width="100%">
+    </div>
   </div>
+
   <div class="column">
-    <img class="image" src="bild1.jpg">
+    <div class="image_container" onclick="window.location='bild1_full.html';">
+      <img class="image" src="../Images/img1.png" width="100%">
+    </div>
   </div>
+
   <div class="column">
-    <img class="image" src="bild2.jpg">
+    <div class="image_container" onclick="window.location='bild1_full.html';">
+      <img class="image" src="../Images/img1.png" width="100%">
+    </div>
   </div>
 </div>
 

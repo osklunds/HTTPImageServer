@@ -111,4 +111,75 @@ basePagePart3 =
 -- Folder page
 --------------------------------------------------------------------------------
 
-generateFolderPage = undefined
+generateFolderPage :: String -> String -> [String] -> String
+generateFolderPage title parent imagePaths =
+  folderBasePagePart1 title parent ++
+  (concatMap thumbnailPart imagePaths) ++
+  folderBasePagePart2
+  
+folderBasePagePart1 :: String -> String -> String
+folderBasePagePart1 title parent =
+  "<!DOCTYPE html>\n\
+  \<html>\n\
+  \<head>\n\
+  \<style>\n\
+  \* {\n\
+  \  box-sizing: border-box;\n\
+  \}\n\
+  \\n\
+  \.column {\n\
+  \  float: left;\n\
+  \  width: 33.33%;\n\
+  \  padding-left: 5px;\n\
+  \  padding-right: 5px;\n\
+  \  padding-top: 5px;\n\
+  \  padding-bottom: : 5px;\n\
+  \}\n\
+  \\n\
+  \.row::after {\n\
+  \  content: \"\";\n\
+  \  clear: both;\n\
+  \  display: table;\n\
+  \}\n\
+  \\n\
+  \.image_container {\n\
+  \  cursor: pointer;\n\
+  \}\n\
+  \\n\
+  \.image {\n\
+  \  object-fit: cover;\n\
+  \  aspect-ratio: 1/1;\n\
+  \  width: 100%;\n\
+  \}\n\
+  \\n\
+  \.button_top {\n\
+  \  background-color: lightgray;\n\
+  \  width: 100%;\n\
+  \  padding: 10px;\n\
+  \  cursor: pointer;\n\
+  \  font-family: Helvetica, sans-serif;\n\
+  \}\n\
+  \\n\
+  \</style>\n\
+  \</head>\n\
+  \<body>\n\
+  \\n\
+  \<div class=\"button_top\" height=\"20px\" onclick=\"window.location='" ++ parent ++ "'\">\n\
+  \  " ++ title ++ "\n\
+  \</div>\n\
+  \\n\
+  \<div class=\"row\">\n"
+
+thumbnailPart imgPath =
+  "  <div class=\"column\">\n\
+  \    <div class=\"image_container\" onclick=\"window.location='bild1_full.html';\">\n\
+  \      <img class=\"image\" src=\"" ++ imgPath ++ "\" width=\"100%\">\n\
+  \    </div>\n\
+  \  </div>\n"
+
+folderBasePagePart2 :: String
+folderBasePagePart2 =
+  "</div>\n\
+  \\n\
+  \</body>\n\
+  \</html>\n"
