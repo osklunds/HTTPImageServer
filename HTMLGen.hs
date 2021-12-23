@@ -11,16 +11,14 @@ where
 
 generateImagePage :: String -> Maybe String -> String -> Maybe String -> String
 generateImagePage parent leftImg curImg rightImg =
-  basePagePart1 ++
-  backgroundImagePart curImg ++
-  basePagePart2 ++
-  parentButtonPart parent ++
+  basePagePart1 curImg ++
   leftButtonPart leftImg ++
+  basePagePart2 parent ++
   rightButtonPart rightImg ++
   basePagePart3
 
-basePagePart1 :: String
-basePagePart1 =
+basePagePart1 :: String -> String
+basePagePart1 curImg =
   "<!DOCTYPE html>\n\
   \<html>\n\
   \<head>\n\
@@ -32,15 +30,9 @@ basePagePart1 =
   \  background-color: black\n\
   \}\n\
   \\n\
-  \.bg {\n"
-
-backgroundImagePart :: String -> String
-backgroundImagePart imagePath =
-  "  background-image: url(\"" ++ imagePath ++ "\");\n"
-
-basePagePart2 :: String
-basePagePart2 =
-  "\n\
+  \.bg {\n\
+  \  background-image: url(\"" ++ curImg ++ "\");\n\
+  \\n\
   \  height: 100%;\n\
   \  float: center;\n\
   \\n\
@@ -89,8 +81,8 @@ leftButtonPart (Just imagePath) =
     ++ imagePath ++ ".html';\"></div>\n\n"
 leftButtonPart Nothing = ""
 
-parentButtonPart :: String -> String
-parentButtonPart parentPath =
+basePagePart2 :: String -> String
+basePagePart2 parentPath =
   "  <div class=\"button_top\" onclick=\"window.location='"
     ++ parentPath ++ ".html';\"></div>\n\n"
 
