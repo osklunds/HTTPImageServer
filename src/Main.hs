@@ -14,7 +14,7 @@ main = run 3000 app
 
 app :: Application
 app request respond = do
-    let state = makeState "Test/Thumbs" "Test/Images"
+    let state = makeState "test/Thumbs" "test/Images"
     let path = joinPath $ map unpack $ pathInfo request
     responseBS <- handleRequest state path
     let responseLBS = fromByteString responseBS
