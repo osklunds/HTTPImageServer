@@ -7,9 +7,12 @@ module RequestHandler
 where
 
 import Data.List
+import Control.Monad
 import System.FilePath
 import Data.ByteString (ByteString, hGetContents)
 import System.IO (withBinaryFile, IOMode(..))
+import System.Directory
+import Data.String (fromString)
 
 import HTMLGen
 
@@ -33,24 +36,53 @@ makeState thumbnailRootPath imageRootPath =
     State { thumbnailRootPath, imageRootPath }
 
 -- TODO: 4 request types
--- - .html
---   - folder
---   - image
--- - .thumb
--- - .full
+-- .html -> image page
+-- .thumb
+-- .full
+-- no extension -> folder page
 
 handleRequest :: State -> String -> IO ByteString
 handleRequest state pathWithExt =
     case ext of
-        ".html" -> undefined
+        "" -> handleFolderPageRequest state path
+        ".html" -> handleImagePageRequest state path
         ".full" -> handleFullImageRequest state path
-        ".thumb" -> undefined
+        ".thumb" -> handleThumbnailRequest state path
         -- todo: handle unexpected
     where
         (path, ext) = splitExtension pathWithExt
 
+handleFolderPageRequest  :: State -> String -> IO ByteString
+handleFolderPageRequest state path = do
+    subPaths <- listDirectory fullPath
+    images <- filterM (\subPath -> isImage $ fullPath </> subPath) subPaths
+    let thumbnails = map (\imagePath -> imagePath ++ ".thumb") images
+    let html = generateFolderPage path "parent" thumbnails
+    return $ fromString html
+    where
+        (State { thumbnailRootPath }) = state
+        fullPath = thumbnailRootPath </> path
+
+        isImage imgPath = do
+            isFile <- doesFileExist imgPath
+            if isFile
+                then do
+                    let ext = takeExtension imgPath
+                    return $ ext `elem` [".jpg", ".jpeg", ".png"]
+                else
+                    return False
+
+handleImagePageRequest  :: State -> String -> IO ByteString
+handleImagePageRequest _state _path = undefined
+
 handleFullImageRequest :: State -> String -> IO ByteString
 handleFullImageRequest (State { imageRootPath }) path =
-    withBinaryFile filePath ReadMode hGetContents
+    withBinaryFile fullPath ReadMode hGetContents
     where
-        filePath = imageRootPath </> path
+        fullPath = imageRootPath </> path
+
+handleThumbnailRequest :: State -> String -> IO ByteString
+handleThumbnailRequest (State { thumbnailRootPath }) path =
+    withBinaryFile fullPath ReadMode hGetContents
+    where
+        fullPath = thumbnailRootPath </> path

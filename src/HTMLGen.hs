@@ -103,6 +103,7 @@ basePagePart3 =
 -- Folder page
 --------------------------------------------------------------------------------
 
+-- todo: sub folders
 generateFolderPage :: String -> String -> [String] -> String
 generateFolderPage title parent imagePaths =
   folderBasePagePart1 title parent ++

@@ -18,4 +18,5 @@ app request respond = do
     let path = joinPath $ map unpack $ pathInfo request
     responseBS <- handleRequest state path
     let responseLBS = fromByteString responseBS
-    respond $ responseBuilder status200 [] responseLBS
+    let httpHeaders = []
+    respond $ responseBuilder status200 httpHeaders responseLBS
