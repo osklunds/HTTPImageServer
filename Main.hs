@@ -1,4 +1,21 @@
-module Main where
+
+import Network.Wai
+import Network.HTTP.Types (status200)
+import Network.Wai.Handler.Warp (run)
+
+import Blaze.ByteString.Builder (fromByteString)
+import System.FilePath (joinPath)
+import Data.Text (unpack)
+
+import RequestHandler
 
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+main = run 3000 app
+
+app :: Application
+app request respond = do
+    let state = makeState "Test/Thumbs" "Test/Images"
+    let path = joinPath $ map unpack $ pathInfo request
+    responseBS <- handleRequest state path
+    let responseLBS = fromByteString responseBS
+    respond $ responseBuilder status200 [] responseLBS

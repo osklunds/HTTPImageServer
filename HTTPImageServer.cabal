@@ -19,7 +19,9 @@ extra-source-files:  CHANGELOG.md, README.md
 
 executable HTTPImageServer
   main-is:             Main.hs
-  -- other-modules:
+  other-modules:
+    HTMLGen,
+    RequestHandler
   -- other-extensions:
   build-depends:       
     base >=4.13 && <4.14,
@@ -27,6 +29,10 @@ executable HTTPImageServer
     warp >= 3.3.18,
     http-types >= 0.12.3,
     directory >= 1.3.6.0,
-    bytestring >= 0.10.10.1
+    bytestring >= 0.10.10.1,
+    filepath >= 1.4.2.1,
+    strict >= 0.4.0.1,
+    blaze-builder >= 0.4.2.2,
+    text >= 1.2.4.0
   -- hs-source-dirs:
   default-language:    Haskell2010
