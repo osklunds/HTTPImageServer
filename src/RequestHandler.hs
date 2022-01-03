@@ -54,29 +54,38 @@ handleRequest state pathWithExt =
 
 handleFolderPageRequest  :: State -> String -> IO ByteString
 handleFolderPageRequest state path = do
-    subPaths <- listDirectory fullPath
-    images <- filterM (\subPath -> isImage $ fullPath </> subPath) subPaths
-    let thumbnails = map (\imagePath -> (path </> imagePath) ++ ".thumb") images
-    mapM putStrLn thumbnails
     let title = "/" ++ path
     let parentPath = case path of
-                             ""    -> Nothing
-                             _else -> Just (takeDirectory path)
+                        ""    -> Nothing
+                        _else -> Just (takeDirectory path)
+    let toThumbPath = pathToThumbnailPath state
 
-    let html = generateFolderPage title parentPath thumbnails
+    entries <- listDirectory $ toThumbPath path
+    let entriesWithPath = map (path </>) entries
+    folders <- filterM (isFolder . toThumbPath) entriesWithPath
+    images <- filterM (isImage . toThumbPath) entriesWithPath
+
+    let imgPathToThumbPath = (++ ".thumb")
+
+    let html = genFolderPage title parentPath folders images imgPathToThumbPath
     return $ fromString html
-    where
-        (State { thumbnailRootPath }) = state
-        fullPath = thumbnailRootPath </> path
+        
+pathToThumbnailPath :: State -> String -> String
+pathToThumbnailPath (State { thumbnailRootPath }) path =
+    thumbnailRootPath </> path
 
-        isImage imgPath = do
-            isFile <- doesFileExist imgPath
-            if isFile
-                then do
-                    let ext = takeExtension imgPath
-                    return $ ext `elem` [".jpg", ".jpeg", ".png"]
-                else
-                    return False
+isFolder :: FilePath -> IO Bool
+isFolder = doesDirectoryExist
+
+isImage :: FilePath -> IO Bool
+isImage imgPath = do
+    isFile <- doesFileExist imgPath
+    if isFile
+        then do
+            let ext = takeExtension imgPath
+            return $ ext `elem` [".jpg", ".jpeg", ".png"]
+        else
+            return False
 
 handleImagePageRequest  :: State -> String -> IO ByteString
 handleImagePageRequest _state _path = undefined

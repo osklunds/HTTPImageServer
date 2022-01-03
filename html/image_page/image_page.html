@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+
+body, html {
+    height: 100%;
+    margin: 0;
+    background-color: black
+}
+
+.bg {
+    background-image: url("BACKGROUND_IMAGE_LINK");
+
+    height: 100%;
+    float: center;
+
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+.button_top {
+    cursor: pointer;
+    float: left;
+    width: 60%;
+    height: 20%;
+    background-color: blue;
+    opacity: .0;
+}
+
+.button_left {
+    BUTTON_LEFT_CURSOR
+    float: left;
+    width: 20%;
+    height: 100%;
+    background-color: red;
+    opacity: .0;
+}
+
+.button_right {
+    BUTTON_RIGHT_CURSOR
+    width: 20%;
+    height: 100%;
+    background-color: green;
+    margin-left: auto; 
+    margin-right: 0;
+    opacity: .0;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="bg">
+    <div class="button_left"BUTTON_LEFT_ONCLICK></div>
+
+    <div class="button_top"BUTTON_TOP_ONCLICK></div>
+
+    <div class="button_right"BUTTON_RIGHT_ONCLICK></div>
+</div>
+
+</body>
+</html>

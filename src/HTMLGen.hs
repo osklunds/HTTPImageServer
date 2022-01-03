@@ -1,185 +1,81 @@
+{-# LANGUAGE TemplateHaskell #-}
 
 module HTMLGen
-( generateImagePage
-, generateFolderPage
+( genImagePage
+, genFolderPage
 )
 where
 
---------------------------------------------------------------------------------
--- Image page
---------------------------------------------------------------------------------
+import Data.FileEmbed
+import qualified Data.Text as T
 
-generateImagePage :: String -> Maybe String -> String -> Maybe String -> String
-generateImagePage parent leftImg curImg rightImg =
-  basePagePart1 curImg ++
-  leftButtonPart leftImg ++
-  basePagePart2 parent ++
-  rightButtonPart rightImg ++
-  basePagePart3
+genImagePage :: String -> Maybe String -> String -> Maybe String -> String
+genImagePage parent leftImg curImg rightImg = replaceList rawPage repList
+    where
+        (buttonLeftCursor, buttonLeftOnclick) = genSideButton leftImg
+        (buttonRightCursor, buttonRightOnclick) = genSideButton rightImg
+        buttonTopOnclick = genOnclick parent
 
-basePagePart1 :: String -> String
-basePagePart1 curImg =
-  "<!DOCTYPE html>\n\
-  \<html>\n\
-  \<head>\n\
-  \<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
-  \<style>\n\
-  \body, html {\n\
-  \  height: 100%;\n\
-  \  margin: 0;\n\
-  \  background-color: black\n\
-  \}\n\
-  \\n\
-  \.bg {\n\
-  \  background-image: url(\"" ++ curImg ++ "\");\n\
-  \\n\
-  \  height: 100%;\n\
-  \  float: center;\n\
-  \\n\
-  \  background-position: center;\n\
-  \  background-repeat: no-repeat;\n\
-  \  background-size: contain;\n\
-  \}\n\
-  \\n\
-  \.button_top {\n\
-  \  cursor: pointer;\n\
-  \  float: left;\n\
-  \  width: 60%;\n\
-  \  height: 20%;\n\
-  \  background-color: blue;\n\
-  \  opacity: .0;\n\
-  \}\n\
-  \\n\
-  \.button_left {\n\
-  \  cursor: pointer;\n\
-  \  float: left;\n\
-  \  width: 20%;\n\
-  \  height: 100%;\n\
-  \  background-color: red;\n\
-  \  opacity: .0;\n\
-  \}\n\
-  \\n\
-  \.button_right {\n\
-  \  cursor: pointer;\n\
-  \  width: 20%;\n\
-  \  height: 100%;\n\
-  \  background-color: green;\n\
-  \  margin-left: auto;\n\
-  \  margin-right: 0;\n\
-  \  opacity: .0;\n\
-  \}\n\
-  \\n\
-  \</style>\n\
-  \</head>\n\
-  \<body>\n\
-  \\n\
-  \<div class=\"bg\">\n"
+        rawPage = $(embedStringFile "html/image_page/image_page.html")
+        repList = [("BACKGROUND_IMAGE_LINK", curImg),
+                   ("BUTTON_LEFT_CURSOR", buttonLeftCursor),
+                   ("BUTTON_RIGHT_CURSOR", buttonRightCursor),
+                   ("BUTTON_LEFT_ONCLICK", buttonLeftOnclick),
+                   ("BUTTON_RIGHT_ONCLICK", buttonRightOnclick),
+                   ("BUTTON_TOP_ONCLICK", buttonTopOnclick)]
 
-leftButtonPart :: Maybe String -> String
-leftButtonPart (Just imagePath) =
-  "  <div class=\"button_left\" onclick=\"window.location='"
-    ++ imagePath ++ ".html';\"></div>\n\n"
-leftButtonPart Nothing = ""
+genSideButton :: Maybe String -> (String, String)
+genSideButton Nothing = ("", "")
+genSideButton (Just leftImg) = (genCursorPointer, genOnclick leftImg)
 
-basePagePart2 :: String -> String
-basePagePart2 parentPath =
-  "  <div class=\"button_top\" onclick=\"window.location='"
-    ++ parentPath ++ ".html';\"></div>\n\n"
+genCursorPointer :: String
+genCursorPointer = "cursor: pointer;"
 
-rightButtonPart :: Maybe String -> String
-rightButtonPart (Just imagePath) =
-  "  <div class=\"button_right\" onclick=\"window.location='"
-    ++ imagePath ++ ".html';\"></div>\n"
-rightButtonPart Nothing = ""
+genOnclick :: String -> String
+genOnclick path = "onclick=\"window.location='" ++ path ++"'\";"
 
-basePagePart3 :: String
-basePagePart3 =
-  "</div>\n\
-  \\n\
-  \</body>\n\
-  \</html>\n"
+replaceList :: String -> [(String, String)] -> String
+replaceList str repList = foldl f str repList
+    where
+        f acc (needle, replacement) = replace needle replacement acc
 
---------------------------------------------------------------------------------
--- Folder page
---------------------------------------------------------------------------------
+replace :: String -> String -> String -> String
+replace needle replacement haystack =
+    T.unpack $ T.replace (T.pack needle)
+                         (T.pack replacement)
+                         (T.pack haystack)
 
--- todo: sub folders
-generateFolderPage :: String -> Maybe String -> [String] -> String
-generateFolderPage title parent imagePaths =
-  folderBasePagePart1 title parent ++
-  (concatMap thumbnailPart imagePaths) ++
-  folderBasePagePart2
-  
-folderBasePagePart1 :: String -> Maybe String -> String
-folderBasePagePart1 title parent =
-  "<!DOCTYPE html>\n\
-  \<html>\n\
-  \<head>\n\
-  \<style>\n\
-  \* {\n\
-  \  box-sizing: border-box;\n\
-  \}\n\
-  \\n\
-  \.column {\n\
-  \  float: left;\n\
-  \  width: 33.33%;\n\
-  \  padding-left: 5px;\n\
-  \  padding-right: 5px;\n\
-  \  padding-top: 5px;\n\
-  \  padding-bottom: : 5px;\n\
-  \}\n\
-  \\n\
-  \.row::after {\n\
-  \  content: \"\";\n\
-  \  clear: both;\n\
-  \  display: table;\n\
-  \}\n\
-  \\n\
-  \.image_container {\n\
-  \  cursor: pointer;\n\
-  \}\n\
-  \\n\
-  \.image {\n\
-  \  object-fit: cover;\n\
-  \  aspect-ratio: 1/1;\n\
-  \  width: 100%;\n\
-  \}\n\
-  \\n\
-  \.button_top {\n\
-  \  background-color: lightgray;\n\
-  \  width: 100%;\n\
-  \  padding: 10px;\n\
-  \" ++ cursor ++ "\
-  \  font-family: Helvetica, sans-serif;\n\
-  \}\n\
-  \\n\
-  \</style>\n\
-  \</head>\n\
-  \<body>\n\
-  \\n\
-  \<div class=\"button_top\" height=\"20px\"" ++ onClick ++ ">\n\
-  \  " ++ title ++ "\n\
-  \</div>\n\
-  \\n\
-  \<div class=\"row\">\n"
-  where
-    (onClick, cursor) = case parent of
-      Nothing
-        -> ("", "")
-      Just parentPath
-        -> ("onclick=\"window.location='" ++ parentPath ++ "'\"",
-            "  cursor: pointer;\n")
+genFolderPage :: String ->
+                 Maybe String ->
+                 [String] ->
+                 [String] ->
+                 (String -> String) ->
+                 String
+genFolderPage title parent folderPaths imagePaths imgPathToThumbPath =
+    replaceList rawPage repList
+    where
+        (buttonTopCursor, buttonTopOnclick) = case parent of
+            Nothing -> ("", "")
+            (Just p) -> (genCursorPointer, genOnclick p)
+        folderList = concatMap genFolderButton folderPaths
+        thumbnailList = concatMap (genThumbnailButton imgPathToThumbPath) imagePaths
 
-thumbnailPart imgPath =
-  "  <div class=\"column\">\n\
-  \    <div class=\"image_container\" onclick=\"window.location='bild1_full.html';\">\n\
-  \      <img class=\"image\" src=\"" ++ imgPath ++ "\" width=\"100%\">\n\
-  \    </div>\n\
-  \  </div>\n"
+        rawPage = $(embedStringFile "html/folder_page/folder_page.html")
+        repList = [("BUTTON_TOP_CURSOR", buttonTopCursor),
+                   ("BUTTON_TOP_ONCLICK", buttonTopOnclick),
+                   ("BUTTON_TOP_TEXT", title),
+                   ("FOLDER_LIST", folderList),
+                   ("THUMBNAIL_LIST", thumbnailList)]
 
-folderBasePagePart2 :: String
-folderBasePagePart2 =
-  "</div>\n\
-  \\n\
-  \</body>\n\
-  \</html>\n"
+genFolderButton :: String -> String
+genFolderButton folderPath = replaceList rawPage repList
+    where
+        rawPage = $(embedStringFile "html/folder_page/folder_button.html")
+        repList = [("FOLDER_BUTTON_TEXT", folderPath)]
+
+genThumbnailButton :: (String -> String) -> String -> String
+genThumbnailButton imgPathToThumbPath imgPath = replaceList rawPage repList
+    where
+        rawPage = $(embedStringFile "html/folder_page/thumbnail.html")
+        repList = [("THUMBNAIL_LINK", imgPath),
+                   ("THUMBNAIL_IMG", imgPathToThumbPath imgPath)]
