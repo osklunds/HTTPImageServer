@@ -16,17 +16,6 @@ import Data.String (fromString)
 
 import HTMLGen
 
--- - For the current path
---     - If folder
---         - Create hedading with current path
---         - For each folder
---             - Create button to subfolder page
---         - For each image
---             - Create thumbnail with link
---     - If image
---         - Create fullscreen image
---         - Create left, up and down buttons
-
 data State = State { thumbnailRootPath :: String
                    , imageRootPath :: String
                    } deriving (Show)
@@ -35,12 +24,6 @@ makeState :: String -> String -> State
 makeState thumbnailRootPath imageRootPath =
     State { thumbnailRootPath, imageRootPath }
 
--- TODO: 4 request types
--- .html -> image page
--- .thumb
--- .full
--- no extension -> folder page
-
 handleRequest :: State -> String -> IO ByteString
 handleRequest state pathWithExt =
     case ext of
@@ -48,7 +31,6 @@ handleRequest state pathWithExt =
         ".html" -> handleImagePageRequest state path
         ".full" -> handleFullImageRequest state path
         ".thumb" -> handleThumbnailRequest state path
-        -- todo: handle unexpected
     where
         (path, ext) = splitExtension pathWithExt
 
