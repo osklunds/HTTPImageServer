@@ -104,13 +104,13 @@ basePagePart3 =
 --------------------------------------------------------------------------------
 
 -- todo: sub folders
-generateFolderPage :: String -> String -> [String] -> String
+generateFolderPage :: String -> Maybe String -> [String] -> String
 generateFolderPage title parent imagePaths =
   folderBasePagePart1 title parent ++
   (concatMap thumbnailPart imagePaths) ++
   folderBasePagePart2
   
-folderBasePagePart1 :: String -> String -> String
+folderBasePagePart1 :: String -> Maybe String -> String
 folderBasePagePart1 title parent =
   "<!DOCTYPE html>\n\
   \<html>\n\
@@ -149,7 +149,7 @@ folderBasePagePart1 title parent =
   \  background-color: lightgray;\n\
   \  width: 100%;\n\
   \  padding: 10px;\n\
-  \  cursor: pointer;\n\
+  \" ++ cursor ++ "\
   \  font-family: Helvetica, sans-serif;\n\
   \}\n\
   \\n\
@@ -157,11 +157,18 @@ folderBasePagePart1 title parent =
   \</head>\n\
   \<body>\n\
   \\n\
-  \<div class=\"button_top\" height=\"20px\" onclick=\"window.location='" ++ parent ++ "'\">\n\
+  \<div class=\"button_top\" height=\"20px\"" ++ onClick ++ ">\n\
   \  " ++ title ++ "\n\
   \</div>\n\
   \\n\
   \<div class=\"row\">\n"
+  where
+    (onClick, cursor) = case parent of
+      Nothing
+        -> ("", "")
+      Just parentPath
+        -> ("onclick=\"window.location='" ++ parentPath ++ "'\"",
+            "  cursor: pointer;\n")
 
 thumbnailPart imgPath =
   "  <div class=\"column\">\n\

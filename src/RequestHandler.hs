@@ -56,8 +56,14 @@ handleFolderPageRequest  :: State -> String -> IO ByteString
 handleFolderPageRequest state path = do
     subPaths <- listDirectory fullPath
     images <- filterM (\subPath -> isImage $ fullPath </> subPath) subPaths
-    let thumbnails = map (\imagePath -> imagePath ++ ".thumb") images
-    let html = generateFolderPage path "parent" thumbnails
+    let thumbnails = map (\imagePath -> (path </> imagePath) ++ ".thumb") images
+    mapM putStrLn thumbnails
+    let title = "/" ++ path
+    let parentPath = case path of
+                             ""    -> Nothing
+                             _else -> Just (takeDirectory path)
+
+    let html = generateFolderPage title parentPath thumbnails
     return $ fromString html
     where
         (State { thumbnailRootPath }) = state
