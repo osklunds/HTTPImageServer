@@ -65,9 +65,7 @@ handleFolderPageRequest state path = do
     folders <- filterM (isFolder . toThumbPath) entriesWithPath
     images <- filterM (isImage . toThumbPath) entriesWithPath
 
-    let imgPathToThumbPath = (++ ".thumb")
-
-    let html = genFolderPage title parentPath folders images imgPathToThumbPath
+    let html = genFolderPage title parentPath folders images
     return $ fromString html
         
 pathToThumbnailPath :: State -> String -> String
@@ -88,13 +86,20 @@ isImage imgPath = do
             return False
 
 handleImagePageRequest  :: State -> String -> IO ByteString
-handleImagePageRequest _state _path = undefined
+handleImagePageRequest state path = do
+    let leftImg = Nothing
+    let rightImg = Nothing
+    let parent = takeDirectory path
+
+    let html = genImagePage parent leftImg path rightImg
+    return $ fromString html
 
 handleFullImageRequest :: State -> String -> IO ByteString
 handleFullImageRequest (State { imageRootPath }) path =
     withBinaryFile fullPath ReadMode hGetContents
     where
-        fullPath = imageRootPath </> path
+        noExt = dropExtension path
+        fullPath = imageRootPath </> noExt
 
 handleThumbnailRequest :: State -> String -> IO ByteString
 handleThumbnailRequest (State { thumbnailRootPath }) path =
