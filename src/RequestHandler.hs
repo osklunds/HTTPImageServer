@@ -67,11 +67,23 @@ isImage imgPath = do
         else
             return False
 
+-- todo: create struct with all paths
+
 handleImagePageRequest  :: State -> String -> IO ByteString
 handleImagePageRequest state path = do
+    let parent = takeDirectory path
+    let toThumbPath = pathToThumbnailPath state
+
+    neighborEntries <- listDirectory $ toThumbPath parent
+    let neighborEntriesWithPath = map (path </>) neighborEntries
+    neighborImages <- filterM (isImage . toThumbPath) neighborEntriesWithPath
+
+
+
+
     let leftImg = Nothing
     let rightImg = Nothing
-    let parent = takeDirectory path
+    
 
     let html = genImagePage parent leftImg path rightImg
     return $ fromString html
