@@ -13,6 +13,8 @@ import Data.ByteString (ByteString, hGetContents)
 import System.IO (withBinaryFile, IOMode(..))
 import System.Directory
 import Data.String (fromString)
+import qualified Data.Text as T
+import Data.Text.Encoding
 
 import HTMLGen
 
@@ -87,20 +89,22 @@ handleFolderPageRequest  :: State -> String -> IO ByteString
 handleFolderPageRequest state path = do
     info <- genFolderPageInfo state path
     let html = genFolderPage info
-    return $ fromString html
+    return $ encodeUtf8 html
         
 genFolderPageInfo :: State -> String -> IO FolderPageInfo
 genFolderPageInfo (State { thumbnailRootPath }) path = do
-    let title = "/" ++ path
+    let title = T.pack $ "/" ++ path
     let parentUrl = case path of
                         ""    -> Nothing
-                        _else -> Just (takeDirectory path)
+                        _else -> Just $ T.pack $ takeDirectory path
     let addThumbPath = (thumbnailRootPath </>)
 
     entries <- listDirectory $ addThumbPath path
+    print entries
     let sortedEntries = sort entries
     let entriesWithPath = map (path </>) sortedEntries
-    folderUrls <- filterM (isFolder . addThumbPath) entriesWithPath
+    folderUrlsStr <- filterM (isFolder . addThumbPath) entriesWithPath
+    let folderUrls = map T.pack folderUrlsStr
     images <- filterM (isImage . addThumbPath) entriesWithPath
     
     let imageUrlPairs = map genImageUrlPair images
@@ -110,8 +114,8 @@ genFolderPageInfo (State { thumbnailRootPath }) path = do
 genImageUrlPair :: String -> ImageUrlPair
 genImageUrlPair url = ImageUrlPair { imagePageUrl, thumbnailUrl }
     where
-        imagePageUrl = url ++ ".html"
-        thumbnailUrl = url ++ ".thumb"
+        imagePageUrl = T.pack $ url ++ ".html"
+        thumbnailUrl = T.pack $ url ++ ".thumb"
 
 isFolder :: FilePath -> IO Bool
 isFolder = doesDirectoryExist
@@ -130,17 +134,17 @@ isImage imgPath = do
 -- Image page request
 --------------------------------------------------------------------------------
 
-handleImagePageRequest  :: State -> String -> IO ByteString
+handleImagePageRequest  :: State -> FilePath -> IO ByteString
 handleImagePageRequest state url = do
     info <- genImagePageInfo state url
     let html = genImagePage info
-    return $ fromString html
+    return $ encodeUtf8 html
 
-genImagePageInfo :: State -> String -> IO ImagePageInfo
+genImagePageInfo :: State -> FilePath -> IO ImagePageInfo
 genImagePageInfo (State { thumbnailRootPath }) url = do
     let folderPath = takeDirectory url 
-    let folderUrl = "/" ++ folderPath
-    let fullImageUrl = "/" ++ url ++ ".full"
+    let folderUrl = T.pack $ "/" ++ folderPath
+    let fullImageUrl = T.pack $ "/" ++ url ++ ".full"
 
     let addThumbPath = (thumbnailRootPath </>)
 
@@ -165,10 +169,10 @@ genImagePageInfo (State { thumbnailRootPath }) url = do
 
     let leftImagePageUrl = case index == 0 of
                                 True -> Nothing
-                                False -> Just $ pageUrlFromIndex $ index - 1
+                                False -> Just $ T.pack $ pageUrlFromIndex $ index - 1
     let rightImagePageUrl = case index == (length sortedImages - 1) of
                                 True -> Nothing
-                                False -> Just $ pageUrlFromIndex $ index + 1
+                                False -> Just $ T.pack $ pageUrlFromIndex $ index + 1
 
     {-
     
