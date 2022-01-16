@@ -1,69 +1,94 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NamedFieldPuns #-}
 
 module HTMLGen
 ( genImagePage
+, ImagePageInfo(..)
 , genFolderPage
+, FolderPageInfo(..)
+, ImageUrlPair(..)
 )
 where
 
 import Data.FileEmbed
 import qualified Data.Text as T
 
-genImagePage :: String -> Maybe String -> String -> Maybe String -> String
-genImagePage parent leftImg curImg rightImg = replaceList rawPage repList
-    where
-        backgroundImageLink = curImg ++ ".full"
-        (buttonLeftCursor, buttonLeftOnclick) = genSideButton leftImg
-        (buttonRightCursor, buttonRightOnclick) = genSideButton rightImg
-        buttonTopOnclick = genOnclick parent
+--------------------------------------------------------------------------------
+-- Image page
+--------------------------------------------------------------------------------
 
-        rawPage = $(embedStringFile "html/image_page/image_page.html")
-        repList = [("BACKGROUND_IMAGE_LINK", backgroundImageLink),
-                   ("BUTTON_LEFT_CURSOR", buttonLeftCursor),
-                   ("BUTTON_RIGHT_CURSOR", buttonRightCursor),
-                   ("BUTTON_LEFT_ONCLICK", buttonLeftOnclick),
-                   ("BUTTON_RIGHT_ONCLICK", buttonRightOnclick),
-                   ("BUTTON_TOP_ONCLICK", buttonTopOnclick)]
+data ImagePageInfo = ImagePageInfo { folderUrl :: String
+                                   , fullImageUrl :: String
+                                   , leftImagePageUrl :: Maybe String
+                                   , rightImagePageUrl :: Maybe String
+                                   }
+
+genImagePage :: ImagePageInfo -> String
+genImagePage info = replaceList rawPage repList
+        where
+            (ImagePageInfo { folderUrl
+                           , fullImageUrl
+                           , leftImagePageUrl
+                           , rightImagePageUrl }) = info
+
+            backgroundImageLink = fullImageUrl
+            (leftButtonCursor,
+             leftButtonOnclick) = genSideButton leftImagePageUrl
+            (rightButtonCursor,
+             rightButtonOnclick) = genSideButton rightImagePageUrl
+            topButtonOnclick = genOnclick folderUrl
+
+            rawPage = $(embedStringFile "html/image_page/image_page.html")
+            repList = [("BACKGROUND_IMAGE_LINK", backgroundImageLink),
+                       ("LEFT_BUTTON_CURSOR", leftButtonCursor),
+                       ("RIGHT_BUTTON_CURSOR", rightButtonCursor),
+                       ("LEFT_BUTTON_ONCLICK", leftButtonOnclick),
+                       ("RIGHT_BUTTON_ONCLICK", rightButtonOnclick),
+                       ("TOP_BUTTON_ONCLICK", topButtonOnclick)]
 
 genSideButton :: Maybe String -> (String, String)
 genSideButton Nothing = ("", "")
-genSideButton (Just leftImg) = (genCursorPointer, genOnclick leftImg)
+genSideButton (Just imagePage) = (genCursorPointer, genOnclick imagePage)
 
 genCursorPointer :: String
 genCursorPointer = "cursor: pointer;"
 
 genOnclick :: String -> String
-genOnclick path = "onclick=\"window.location='" ++ path ++"'\";"
+genOnclick url = "onclick=\"window.location='" ++ url ++"';\""
 
-replaceList :: String -> [(String, String)] -> String
-replaceList str repList = foldl f str repList
-    where
-        f acc (needle, replacement) = replace needle replacement acc
+--------------------------------------------------------------------------------
+-- Folder page
+--------------------------------------------------------------------------------
 
-replace :: String -> String -> String -> String
-replace needle replacement haystack =
-    T.unpack $ T.replace (T.pack needle)
-                         (T.pack replacement)
-                         (T.pack haystack)
+data FolderPageInfo = FolderPageInfo { title :: String
+                                     , parentUrl :: Maybe String
+                                     , folderUrls :: [String]
+                                     , imageUrlPairs :: [ImageUrlPair]
+                                     }
 
-genFolderPage :: String ->
-                 Maybe String ->
-                 [String] ->
-                 [String] ->
-                 String
-genFolderPage title parent folderPaths imagePaths =
+data ImageUrlPair = ImageUrlPair { imagePageUrl :: String
+                                 , thumbnailUrl :: String
+                                 }
+
+genFolderPage :: FolderPageInfo -> String
+genFolderPage info =
     replaceList rawPage repList
     where
-        (buttonTopCursor, buttonTopOnclick) = case parent of
-            Nothing -> ("", "")
-            (Just p) -> (genCursorPointer, genOnclick p)
-        folderList = concatMap genFolderButton folderPaths
-        thumbnailList = concatMap genThumbnailButton imagePaths
+        (FolderPageInfo { title
+                        , parentUrl
+                        , folderUrls
+                        , imageUrlPairs }) = info
+
+        (topButtonCursor, topButtonOnclick) = case parentUrl of
+                Nothing -> ("", "")
+                (Just url) -> (genCursorPointer, genOnclick url)
+        folderList = concatMap genFolderButton folderUrls
+        thumbnailList = concatMap genThumbnailButton imageUrlPairs
 
         rawPage = $(embedStringFile "html/folder_page/folder_page.html")
-        repList = [("BUTTON_TOP_CURSOR", buttonTopCursor),
-                   ("BUTTON_TOP_ONCLICK", buttonTopOnclick),
-                   ("BUTTON_TOP_TEXT", title),
+        repList = [("TOP_BUTTON_CURSOR", topButtonCursor),
+                   ("TOP_BUTTON_ONCLICK", topButtonOnclick),
+                   ("TOP_BUTTON_TEXT", title),
                    ("FOLDER_LIST", folderList),
                    ("THUMBNAIL_LIST", thumbnailList)]
 
@@ -73,9 +98,26 @@ genFolderButton folderPath = replaceList rawPage repList
         rawPage = $(embedStringFile "html/folder_page/folder_button.html")
         repList = [("FOLDER_BUTTON_TEXT", folderPath)]
 
-genThumbnailButton :: String -> String
-genThumbnailButton imgPath = replaceList rawPage repList
+genThumbnailButton :: ImageUrlPair -> String
+genThumbnailButton imageUrlPair = replaceList rawPage repList
     where
+        (ImageUrlPair {imagePageUrl, thumbnailUrl}) = imageUrlPair
+
         rawPage = $(embedStringFile "html/folder_page/thumbnail.html")
-        repList = [("THUMBNAIL_LINK", imgPath ++ ".html"),
-                   ("THUMBNAIL_IMG", imgPath ++ ".thumb")]
+        repList = [("THUMBNAIL_LINK", imagePageUrl),
+                   ("THUMBNAIL_IMG", thumbnailUrl)]
+
+--------------------------------------------------------------------------------
+-- Common
+--------------------------------------------------------------------------------
+
+replaceList :: String -> [(String, String)] -> String
+replaceList str repList = foldl f str repList
+        where
+                f acc (needle, replacement) = replace needle replacement acc
+
+replace :: String -> String -> String -> String
+replace needle replacement haystack =
+        T.unpack $ T.replace (T.pack needle)
+                                                 (T.pack replacement)
+                                                 (T.pack haystack)

@@ -10,11 +10,14 @@ import Data.Text (unpack)
 import RequestHandler
 
 main :: IO ()
-main = run 3000 app
+main = mainWithArgs "test/Thumbs" "test/Images"
 
-app :: Application
-app request respond = do
-    let state = makeState "test/Thumbs" "test/Images"
+mainWithArgs :: String -> String -> IO ()
+mainWithArgs thumbRoot fullRoot = run 3000 (app thumbRoot fullRoot)
+
+app :: String -> String -> Application
+app thumbRoot fullRoot request respond = do
+    let state = makeState thumbRoot fullRoot 
     let path = joinPath $ map unpack $ pathInfo request
     responseBS <- handleRequest state path
     let responseLBS = fromByteString responseBS

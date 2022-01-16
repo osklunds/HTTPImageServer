@@ -24,8 +24,53 @@ makeState :: String -> String -> State
 makeState thumbnailRootPath imageRootPath =
     State { thumbnailRootPath, imageRootPath }
 
+{-
+# Overview page
+
+ReqURL:
+folder/subfolder
+
+Generated URLs:
+folder
+folder/subfolder/anotherfolder
+folder/subfolder   <DATE> name1.png.jpg.html
+folder/subfolder   <DATE> name1.png.jpg.thumb
+folder/subfolder   <DATE> name2.png.jpg.html
+folder/subfolder   <DATE> name2.png.jpg.thumb
+folder/subfolder   <DATE> name3.png.jpg.html
+folder/subfolder   <DATE> name3.png.jpg.thumb
+
+# Img page
+
+ReqURL:
+folder/subfolder   <DATE> name2.png.jpg.html
+
+Generated URLs:
+folder/subfolder
+folder/subfolder   <DATE> name1.png.jpg.html
+folder/subfolder   <DATE> name2.png.jpg.full
+folder/subfolder   <DATE> name3.png.jpg.html
+
+# Thumbnail
+
+ReqURL:
+folder/subfolder   <DATE> name1.png.jpg.thumb
+
+Path:
+folder/subfolder   <DATE> name1.png.jpg
+
+# Full image
+
+ReqURL:
+folder/subfolder   <DATE> name1.png.jpg.full
+
+Path:
+folder/subfolder/name1.png
+-}
+
 handleRequest :: State -> String -> IO ByteString
-handleRequest state pathWithExt =
+handleRequest state pathWithExt = do
+    putStrLn pathWithExt
     case ext of
         "" -> handleFolderPageRequest state path
         ".html" -> handleImagePageRequest state path
@@ -34,25 +79,39 @@ handleRequest state pathWithExt =
     where
         (path, ext) = splitExtension pathWithExt
 
+--------------------------------------------------------------------------------
+-- Folder page request
+--------------------------------------------------------------------------------
+
 handleFolderPageRequest  :: State -> String -> IO ByteString
 handleFolderPageRequest state path = do
-    let title = "/" ++ path
-    let parentPath = case path of
-                        ""    -> Nothing
-                        _else -> Just (takeDirectory path)
-    let toThumbPath = pathToThumbnailPath state
-
-    entries <- listDirectory $ toThumbPath path
-    let entriesWithPath = map (path </>) entries
-    folders <- filterM (isFolder . toThumbPath) entriesWithPath
-    images <- filterM (isImage . toThumbPath) entriesWithPath
-
-    let html = genFolderPage title parentPath folders images
+    info <- genFolderPageInfo state path
+    let html = genFolderPage info
     return $ fromString html
         
-pathToThumbnailPath :: State -> String -> String
-pathToThumbnailPath (State { thumbnailRootPath }) path =
-    thumbnailRootPath </> path
+genFolderPageInfo :: State -> String -> IO FolderPageInfo
+genFolderPageInfo (State { thumbnailRootPath }) path = do
+    let title = "/" ++ path
+    let parentUrl = case path of
+                        ""    -> Nothing
+                        _else -> Just (takeDirectory path)
+    let addThumbPath = (thumbnailRootPath </>)
+
+    entries <- listDirectory $ addThumbPath path
+    let sortedEntries = sort entries
+    let entriesWithPath = map (path </>) sortedEntries
+    folderUrls <- filterM (isFolder . addThumbPath) entriesWithPath
+    images <- filterM (isImage . addThumbPath) entriesWithPath
+    
+    let imageUrlPairs = map genImageUrlPair images
+
+    return $ FolderPageInfo { title, parentUrl, folderUrls, imageUrlPairs }
+
+genImageUrlPair :: String -> ImageUrlPair
+genImageUrlPair url = ImageUrlPair { imagePageUrl, thumbnailUrl }
+    where
+        imagePageUrl = url ++ ".html"
+        thumbnailUrl = url ++ ".thumb"
 
 isFolder :: FilePath -> IO Bool
 isFolder = doesDirectoryExist
@@ -67,33 +126,78 @@ isImage imgPath = do
         else
             return False
 
--- todo: create struct with all paths
+--------------------------------------------------------------------------------
+-- Image page request
+--------------------------------------------------------------------------------
 
 handleImagePageRequest  :: State -> String -> IO ByteString
-handleImagePageRequest state path = do
-    let parent = takeDirectory path
-    let toThumbPath = pathToThumbnailPath state
-
-    neighborEntries <- listDirectory $ toThumbPath parent
-    let neighborEntriesWithPath = map (path </>) neighborEntries
-    neighborImages <- filterM (isImage . toThumbPath) neighborEntriesWithPath
-
-
-
-
-    let leftImg = Nothing
-    let rightImg = Nothing
-    
-
-    let html = genImagePage parent leftImg path rightImg
+handleImagePageRequest state url = do
+    info <- genImagePageInfo state url
+    let html = genImagePage info
     return $ fromString html
+
+genImagePageInfo :: State -> String -> IO ImagePageInfo
+genImagePageInfo (State { thumbnailRootPath }) url = do
+    let folderPath = takeDirectory url 
+    let folderUrl = "/" ++ folderPath
+    let fullImageUrl = "/" ++ url ++ ".full"
+
+    let addThumbPath = (thumbnailRootPath </>)
+
+    entries <- listDirectory $ addThumbPath folderPath
+    mapM putStrLn entries
+    putStrLn "---"
+    let entriesWithPath = map (folderPath </>) entries
+    mapM putStrLn entriesWithPath
+    putStrLn "---"
+    images <- filterM (isImage . addThumbPath) entriesWithPath
+    mapM putStrLn images
+    putStrLn "---"
+    let sortedImages = sort images
+    mapM putStrLn sortedImages
+    putStrLn "---"
+    let currentImage = folderPath </> takeFileName url
+    putStrLn currentImage
+    putStrLn "---"
+    let (Just index) = findIndex (==currentImage) sortedImages
+    let pageUrlFromIndex i = let imageName = sortedImages !! i
+                             in "/" ++ imageName ++ ".html"
+
+    let leftImagePageUrl = case index == 0 of
+                                True -> Nothing
+                                False -> Just $ pageUrlFromIndex $ index - 1
+    let rightImagePageUrl = case index == (length sortedImages - 1) of
+                                True -> Nothing
+                                False -> Just $ pageUrlFromIndex $ index + 1
+
+    {-
+    
+    1. from image url, find folder
+    2. list all entries and filter images
+    3. sort images
+    4. find index of current image
+    5. -1 and +1 are left and right names
+
+    -}
+
+    return $ ImagePageInfo { folderUrl
+                           , fullImageUrl
+                           , leftImagePageUrl
+                           , rightImagePageUrl }
+
+--------------------------------------------------------------------------------
+-- Full image request
+--------------------------------------------------------------------------------
 
 handleFullImageRequest :: State -> String -> IO ByteString
 handleFullImageRequest (State { imageRootPath }) path =
     withBinaryFile fullPath ReadMode hGetContents
     where
-        noExt = dropExtension path
-        fullPath = imageRootPath </> noExt
+        fullPath = imageRootPath </> path
+
+--------------------------------------------------------------------------------
+-- Thumbnail request
+--------------------------------------------------------------------------------
 
 handleThumbnailRequest :: State -> String -> IO ByteString
 handleThumbnailRequest (State { thumbnailRootPath }) path =
