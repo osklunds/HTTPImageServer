@@ -9,7 +9,7 @@ where
 import Data.List
 import Control.Monad
 import System.FilePath
-import Data.ByteString (ByteString, hGetContents)
+import Data.ByteString (ByteString, hGetContents, unpack)
 import System.IO (withBinaryFile, IOMode(..))
 import System.Directory
 import Data.String (fromString)
@@ -72,7 +72,7 @@ folder/subfolder/name1.png
 
 handleRequest :: State -> String -> IO ByteString
 handleRequest state pathWithExt = do
-    putStrLn pathWithExt
+    print $ "Request: " ++ pathWithExt
     case ext of
         "" -> handleFolderPageRequest state path
         ".html" -> handleImagePageRequest state path
@@ -90,32 +90,36 @@ handleFolderPageRequest state path = do
     info <- genFolderPageInfo state path
     let html = genFolderPage info
     return $ encodeUtf8 html
-        
+
 genFolderPageInfo :: State -> String -> IO FolderPageInfo
 genFolderPageInfo (State { thumbnailRootPath }) path = do
+    print path
     let title = T.pack $ "/" ++ path
     let parentUrl = case path of
                         ""    -> Nothing
-                        _else -> Just $ T.pack $ takeDirectory path
+                        _else -> Just $ T.pack $ "/" ++ takeDirectory path
     let addThumbPath = (thumbnailRootPath </>)
 
     entries <- listDirectory $ addThumbPath path
-    print entries
     let sortedEntries = sort entries
     let entriesWithPath = map (path </>) sortedEntries
     folderUrlsStr <- filterM (isFolder . addThumbPath) entriesWithPath
     let folderUrls = map T.pack folderUrlsStr
+    mapM (putStrLn . T.unpack) folderUrls
+
     images <- filterM (isImage . addThumbPath) entriesWithPath
     
     let imageUrlPairs = map genImageUrlPair images
+
+    print "hej"
 
     return $ FolderPageInfo { title, parentUrl, folderUrls, imageUrlPairs }
 
 genImageUrlPair :: String -> ImageUrlPair
 genImageUrlPair url = ImageUrlPair { imagePageUrl, thumbnailUrl }
     where
-        imagePageUrl = T.pack $ url ++ ".html"
-        thumbnailUrl = T.pack $ url ++ ".thumb"
+        imagePageUrl = T.pack $ "/" ++ url ++ ".html"
+        thumbnailUrl = T.pack $ "/" ++ url ++ ".thumb"
 
 isFolder :: FilePath -> IO Bool
 isFolder = doesDirectoryExist
