@@ -3,6 +3,7 @@
 module RequestHandler
 ( makeState
 , handleRequest
+, PageType(..)
 )
 where
 
@@ -70,16 +71,19 @@ Path:
 folder/subfolder/name1.png
 -}
 
-handleRequest :: State -> String -> IO ByteString
+data PageType = Navigation | Image
+
+handleRequest :: State -> String -> IO (ByteString, PageType)
 handleRequest state pathWithExt = do
+    let (path, ext) = splitExtension pathWithExt
     print $ "Request: " ++ pathWithExt
-    case ext of
-        "" -> handleFolderPageRequest state path
-        ".html" -> handleImagePageRequest state path
-        ".full" -> handleFullImageRequest state path
-        ".thumb" -> handleThumbnailRequest state path
-    where
-        (path, ext) = splitExtension pathWithExt
+    let (handler, pageType) = case ext of
+                                "" -> (handleFolderPageRequest, Navigation)
+                                ".html" -> (handleImagePageRequest, Navigation)
+                                ".full" -> (handleFullImageRequest, Image)
+                                ".thumb" -> (handleThumbnailRequest, Image)
+    page <- handler state path
+    return (page, pageType)
 
 --------------------------------------------------------------------------------
 -- Folder page request
@@ -93,7 +97,6 @@ handleFolderPageRequest state path = do
 
 genFolderPageInfo :: State -> String -> IO FolderPageInfo
 genFolderPageInfo (State { thumbnailRootPath }) path = do
-    print path
     let title = T.pack $ "/" ++ path
     let parentUrl = case path of
                         ""    -> Nothing
@@ -105,13 +108,10 @@ genFolderPageInfo (State { thumbnailRootPath }) path = do
     let entriesWithPath = map (path </>) sortedEntries
     folderUrlsStr <- filterM (isFolder . addThumbPath) entriesWithPath
     let folderUrls = map T.pack folderUrlsStr
-    mapM (putStrLn . T.unpack) folderUrls
 
     images <- filterM (isImage . addThumbPath) entriesWithPath
     
     let imageUrlPairs = map genImageUrlPair images
-
-    print "hej"
 
     return $ FolderPageInfo { title, parentUrl, folderUrls, imageUrlPairs }
 
@@ -153,20 +153,10 @@ genImagePageInfo (State { thumbnailRootPath }) url = do
     let addThumbPath = (thumbnailRootPath </>)
 
     entries <- listDirectory $ addThumbPath folderPath
-    mapM putStrLn entries
-    putStrLn "---"
     let entriesWithPath = map (folderPath </>) entries
-    mapM putStrLn entriesWithPath
-    putStrLn "---"
     images <- filterM (isImage . addThumbPath) entriesWithPath
-    mapM putStrLn images
-    putStrLn "---"
     let sortedImages = sort images
-    mapM putStrLn sortedImages
-    putStrLn "---"
     let currentImage = folderPath </> takeFileName url
-    putStrLn currentImage
-    putStrLn "---"
     let (Just index) = findIndex (==currentImage) sortedImages
     let pageUrlFromIndex i = let imageName = sortedImages !! i
                              in "/" ++ imageName ++ ".html"
