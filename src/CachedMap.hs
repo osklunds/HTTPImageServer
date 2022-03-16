@@ -11,7 +11,7 @@ import Data.Map hiding (map)
 import Prelude hiding (map, lookup)
 
 
-newtype CachedMap k v = CachedMap { map :: Map k v }
+newtype CachedMap k v = CachedMap { map :: Map k v } deriving (Eq)
 
 new :: CachedMap k v
 new = CachedMap { map = empty }

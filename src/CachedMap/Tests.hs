@@ -10,22 +10,42 @@ import Test.QuickCheck.Monadic
 
 prop_get :: Int -> Int -> Property
 prop_get key value = monadicIO $ do
+    -- Arrange
     let map1 = new
-    (_map2, valueGotten) <- run $ get key (return value) map1
+
+    -- Act
+    (map2, valueGotten) <- run $ get key (return value) map1
+
+    -- Assert
+    assert $ map2 /= map1
     assert $ value == valueGotten
 
 prop_get_two_keys :: Int -> Int -> Int -> Int -> Property
 prop_get_two_keys key1 key2 value1 value2 = key1 /= key2 ==> monadicIO $ do
+    -- Arrange
     let map1 = new
     (map2, _value) <- run $ get key1 (return value1) map1
-    (_map3, valueGotten) <- run $ get key2 (return value2) map2
-    assert $ value2 == valueGotten
+
+    -- Act
+    (map3, value2Gotten) <- run $ get key2 (return value2) map2
+
+    -- Assert
+    (_map4, value1Gotten) <- run $ get key1 (return value1) map3
+    assert $ map3 /= map2
+    assert $ value2 == value2Gotten
+    assert $ value1 == value1Gotten
 
 prop_get_get :: Int -> Int -> Int -> Property
 prop_get_get key value1 value2 = value1 /= value2 ==> monadicIO $ do
+    -- Arrange
     let map1 = new
     (map2, _value) <- run $ get key (return value1) map1
-    (_map3, valueGotten) <- run $ get key (return value2) map2
+    
+    -- Act
+    (map3, valueGotten) <- run $ get key (return value2) map2
+
+    -- Assert
+    assert $ map3 == map2
     assert $ value1 == valueGotten
 
 
