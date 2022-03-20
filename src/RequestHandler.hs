@@ -4,6 +4,7 @@ module RequestHandler
 ( makeState
 , handleRequest
 , PageType(..)
+, Cache
 )
 where
 
@@ -16,16 +17,21 @@ import System.Directory
 import Data.String (fromString)
 import qualified Data.Text as T
 import Data.Text.Encoding
+import Control.Concurrent.MVar
 
 import HTMLGen
+import CachedMap
 
-data State = State { thumbnailRootPath :: String
-                   , imageRootPath :: String
-                   } deriving (Show)
+type Cache = CachedMap FilePath [FilePath]
 
-makeState :: String -> String -> State
-makeState thumbnailRootPath imageRootPath =
-    State { thumbnailRootPath, imageRootPath }
+data State = State { thumbnailRootPath :: FilePath
+                   , imageRootPath :: FilePath
+                   , cache :: MVar Cache
+                   }
+
+makeState :: String -> String -> MVar Cache -> State
+makeState thumbnailRootPath imageRootPath cache =
+    State { thumbnailRootPath, imageRootPath, cache }
 
 {-
 # Overview page
@@ -96,14 +102,14 @@ handleFolderPageRequest state path = do
     return $ encodeUtf8 html
 
 genFolderPageInfo :: State -> String -> IO FolderPageInfo
-genFolderPageInfo (State { thumbnailRootPath }) path = do
+genFolderPageInfo (State { thumbnailRootPath, cache }) path = do
     let title = T.pack $ "/" ++ path
     let parentUrl = case path of
                         ""    -> Nothing
                         _else -> Just $ T.pack $ "/" ++ takeDirectory path
     let addThumbPath = (thumbnailRootPath </>)
 
-    entries <- listDirectory $ addThumbPath path
+    entries <- listDirectoryCached cache $ addThumbPath path
     let sortedEntries = sort entries
     let entriesWithPath = map (path </>) sortedEntries
     folderUrlsStr <- filterM (isFolder . addThumbPath) entriesWithPath
@@ -145,14 +151,14 @@ handleImagePageRequest state url = do
     return $ encodeUtf8 html
 
 genImagePageInfo :: State -> FilePath -> IO ImagePageInfo
-genImagePageInfo (State { thumbnailRootPath }) url = do
+genImagePageInfo (State { thumbnailRootPath, cache }) url = do
     let folderPath = takeDirectory url 
     let folderUrl = T.pack $ "/" ++ folderPath
     let fullImageUrl = T.pack $ "/" ++ url ++ ".full"
 
     let addThumbPath = (thumbnailRootPath </>)
 
-    entries <- listDirectory $ addThumbPath folderPath
+    entries <- listDirectoryCached cache $ addThumbPath folderPath
     let entriesWithPath = map (folderPath </>) entries
     images <- filterM (isImage . addThumbPath) entriesWithPath
     let sortedImages = sort images
@@ -202,3 +208,17 @@ handleThumbnailRequest (State { thumbnailRootPath }) path =
     withBinaryFile fullPath ReadMode hGetContents
     where
         fullPath = thumbnailRootPath </> path
+
+--------------------------------------------------------------------------------
+-- Helpers
+--------------------------------------------------------------------------------
+
+listDirectoryCached :: MVar Cache -> FilePath -> IO [FilePath]
+listDirectoryCached cacheMVar filePath = do
+    cache <- takeMVar cacheMVar
+    let doListDirectory = do
+                            putStrLn $ "real list for: " ++ filePath
+                            listDirectory filePath
+    (newCache, entries) <- get filePath doListDirectory cache
+    putMVar cacheMVar newCache
+    return entries
