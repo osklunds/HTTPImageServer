@@ -14,22 +14,22 @@ import Prelude hiding (map, lookup)
 import Data.Time.Clock
 
 
-newtype CachedMap k v = CachedMap { map :: Map k (UTCTime, v) } deriving (Eq)
+type CachedMap k v = Map k (UTCTime, v)
 
 new :: CachedMap k v
-new = CachedMap { map = empty }
+new = empty
 
 get :: Ord k => k -> IO v -> CachedMap k v -> IO ((CachedMap k v), v)
-get key calcValue cachedMap = do
+get key calcValue map = do
     now <- getCurrentTime
-    getWithNow now key calcValue cachedMap
+    getWithNow now key calcValue map
 
 getWithNow :: Ord k => UTCTime ->
                        k ->
                        IO v ->
                        CachedMap k v ->
                        IO ((CachedMap k v), v)
-getWithNow now key calcValue cachedMap@(CachedMap { map }) = do
+getWithNow now key calcValue map = do
     case lookup key map of
         (Just (timeOfCalc, value)) -> do
             let diff = diffUTCTime now timeOfCalc
@@ -37,19 +37,19 @@ getWithNow now key calcValue cachedMap@(CachedMap { map }) = do
                 then
                     calculateAndUpdate now key calcValue map
                 else
-                    return (cachedMap, value)
+                    return (map, value)
         Nothing ->
             calculateAndUpdate now key calcValue map
 
 calculateAndUpdate :: Ord k => UTCTime ->
                                k ->
                                IO v ->
-                               Map k (UTCTime, v) ->
+                               CachedMap k v ->
                                IO ((CachedMap k v), v)
 calculateAndUpdate now key calcValue map = do
     value <- calcValue
     let newMap = insert key (now, value) map
-    return (CachedMap { map = newMap}, value)
+    return (newMap, value)
 
 maxAge :: NominalDiffTime
 maxAge = 600
