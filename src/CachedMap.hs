@@ -34,16 +34,22 @@ getWithNow now key calcValue cachedMap@(CachedMap { map }) = do
         (Just (timeOfCalc, value)) -> do
             let diff = diffUTCTime now timeOfCalc
             if diff >= maxAge
-                then do
-                    value <- calcValue
-                    let newMap = insert key (now, value) map
-                    return (CachedMap { map = newMap}, value)
+                then
+                    calculateAndUpdate now key calcValue map
                 else
                     return (cachedMap, value)
-        Nothing -> do
-            value <- calcValue
-            let newMap = insert key (now, value) map
-            return (CachedMap { map = newMap}, value)
+        Nothing ->
+            calculateAndUpdate now key calcValue map
+
+calculateAndUpdate :: Ord k => UTCTime ->
+                               k ->
+                               IO v ->
+                               Map k (UTCTime, v) ->
+                               IO ((CachedMap k v), v)
+calculateAndUpdate now key calcValue map = do
+    value <- calcValue
+    let newMap = insert key (now, value) map
+    return (CachedMap { map = newMap}, value)
 
 maxAge :: NominalDiffTime
 maxAge = 600
