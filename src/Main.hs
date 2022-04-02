@@ -33,8 +33,7 @@ app thumbRoot fullRoot cache request respond = do
     (page, pageType) <- handleRequest state path
     let httpHeaders = case pageType of
                                 Image ->
-                                    [(hCacheControl, "public"),
-                                     (hCacheControl, "max-age=86400")]
+                                    [(hCacheControl, "public, max-age=31536000")]
                                 Navigation ->
                                     [(hCacheControl, "no-store")]
     respond $ responseBuilder status200 httpHeaders $ copyByteString $ page
