@@ -51,10 +51,11 @@
 </style>
 </head>
 
-<body>
+<body onscroll="page_scrolled()">
 
 <div class="top_button" height="30px" TOP_BUTTON_ONCLICK>
 TOP_BUTTON_TEXT
+
 </div>
 
 FOLDER_LIST
@@ -65,3 +66,19 @@ THUMBNAIL_LIST
 
 </body>
 </html>
+
+<script>
+
+window.onload = page_loaded;
+
+function page_loaded() {
+    if (sessionStorage.position) {
+        window.scrollTo(0, parseInt(sessionStorage.position));
+    }
+}
+
+function page_scrolled() {
+    sessionStorage.position = window.pageYOffset;
+}
+
+</script>
