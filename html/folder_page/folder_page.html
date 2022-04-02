@@ -72,13 +72,19 @@ THUMBNAIL_LIST
 window.onload = page_loaded;
 
 function page_loaded() {
-    if (sessionStorage.position) {
-        window.scrollTo(0, parseInt(sessionStorage.position));
+    var key = window.location.href;
+    var val = sessionStorage.getItem(key);
+
+    if (val) {
+        window.scrollTo(0, parseInt(val));
     }
 }
 
 function page_scrolled() {
-    sessionStorage.position = window.pageYOffset;
+    var key = window.location.href;
+    var val = window.pageYOffset;
+
+    sessionStorage.setItem(key, val);
 }
 
 </script>
