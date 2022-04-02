@@ -14,7 +14,7 @@ where
 import Prelude hiding (concatMap)
 import Data.FileEmbed
 import qualified Data.Text as T
-import Data.Text (Text)
+import Data.Text (Text, append)
 
 --------------------------------------------------------------------------------
 -- Image page
@@ -24,30 +24,32 @@ data ImagePageInfo = ImagePageInfo { folderUrl :: Text
                                    , fullImageUrl :: Text
                                    , leftImagePageUrl :: Maybe Text
                                    , rightImagePageUrl :: Maybe Text
+                                   , preloadImageUrls :: [Text]
                                    }
 
 genImagePage :: ImagePageInfo -> Text
 genImagePage info = replaceList rawPage repList
-        where
-            (ImagePageInfo { folderUrl
-                           , fullImageUrl
-                           , leftImagePageUrl
-                           , rightImagePageUrl }) = info
+    where
+        (ImagePageInfo { folderUrl
+                       , fullImageUrl
+                       , leftImagePageUrl
+                       , rightImagePageUrl
+                       , preloadImageUrls }) = info
 
-            backgroundImageLink = fullImageUrl
-            (leftButtonCursor,
-             leftButtonOnclick) = genSideButton leftImagePageUrl
-            (rightButtonCursor,
-             rightButtonOnclick) = genSideButton rightImagePageUrl
-            topButtonOnclick = genOnclick folderUrl
+        backgroundImageLink = fullImageUrl
+        (leftButtonCursor, leftButtonOnclick) = genSideButton leftImagePageUrl
+        (rightButtonCursor, rightButtonOnclick) = genSideButton rightImagePageUrl
+        topButtonOnclick = genOnclick folderUrl
+        preloadImages = concatMap genPreloadImage preloadImageUrls
 
-            rawPage = $(embedStringFile "html/image_page/image_page.html")
-            repList = [("BACKGROUND_IMAGE_LINK", backgroundImageLink),
-                       ("LEFT_BUTTON_CURSOR", leftButtonCursor),
-                       ("RIGHT_BUTTON_CURSOR", rightButtonCursor),
-                       ("LEFT_BUTTON_ONCLICK", leftButtonOnclick),
-                       ("RIGHT_BUTTON_ONCLICK", rightButtonOnclick),
-                       ("TOP_BUTTON_ONCLICK", topButtonOnclick)]
+        rawPage = $(embedStringFile "html/image_page/image_page.html")
+        repList = [("BACKGROUND_IMAGE_LINK", backgroundImageLink),
+                   ("LEFT_BUTTON_CURSOR", leftButtonCursor),
+                   ("RIGHT_BUTTON_CURSOR", rightButtonCursor),
+                   ("LEFT_BUTTON_ONCLICK", leftButtonOnclick),
+                   ("RIGHT_BUTTON_ONCLICK", rightButtonOnclick),
+                   ("TOP_BUTTON_ONCLICK", topButtonOnclick),
+                   ("PRELOAD_IMAGES", preloadImages)]
 
 genSideButton :: Maybe Text -> (Text, Text)
 genSideButton Nothing = ("", "")
@@ -58,6 +60,12 @@ genCursorPointer = "cursor: pointer;"
 
 genOnclick :: Text -> Text
 genOnclick url = T.concat ["onclick=\"window.location='", url, "';\""]
+
+genPreloadImage :: Text -> Text
+genPreloadImage imageUrl = replaceList rawPage repList
+    where
+        rawPage = $(embedStringFile "html/image_page/preload_image.html")
+        repList = [("PRELOAD_IMG", imageUrl)]
 
 --------------------------------------------------------------------------------
 -- Folder page
@@ -84,8 +92,8 @@ genFolderPage info =
                         , imageUrlPairs }) = info
 
         (topButtonCursor, topButtonOnclick) = case parentUrl of
-                Nothing -> ("", "")
-                (Just url) -> (genCursorPointer, genOnclick url)
+            Nothing -> ("", "")
+            (Just url) -> (genCursorPointer, genOnclick url)
         folderList = concatMap genFolderButton folderUrls
         thumbnailList = concatMap genThumbnailButton imageUrlPairs
 
@@ -117,8 +125,8 @@ genThumbnailButton imageUrlPair = replaceList rawPage repList
 
 replaceList :: Text -> [(Text, Text)] -> Text
 replaceList str repList = foldl f str repList
-        where
-                f acc (needle, replacement) = T.replace needle replacement acc
+    where
+        f acc (needle, replacement) = T.replace needle replacement acc
 
 concatMap :: (a -> Text) -> [a] -> Text
 concatMap f ts = T.concat $ map f ts

@@ -82,7 +82,15 @@ data PageType = Navigation | Image
 handleRequest :: State -> String -> IO (ByteString, PageType)
 handleRequest state pathWithExt = do
     let (path, ext) = splitExtension pathWithExt
-    print $ "Request: " ++ pathWithExt
+
+    let cacheMVar = cache state
+
+    cachee <- takeMVar cacheMVar
+
+    putStrLn $ "Request: " ++ pathWithExt
+
+    putMVar cacheMVar cachee
+
     let (handler, pageType) = case ext of
                                 "" -> (handleFolderPageRequest, Navigation)
                                 ".html" -> (handleImagePageRequest, Navigation)
@@ -152,10 +160,11 @@ handleImagePageRequest state url = do
 
 genImagePageInfo :: State -> FilePath -> IO ImagePageInfo
 genImagePageInfo (State { thumbnailRootPath, cache }) url = do
+    -- folderUrl
     let folderPath = takeDirectory url 
     let folderUrl = T.pack $ "/" ++ folderPath
-    let fullImageUrl = T.pack $ "/" ++ url ++ ".full"
 
+    -- fullImageUrl
     let addThumbPath = (thumbnailRootPath </>)
 
     entries <- listDirectoryCached cache $ addThumbPath folderPath
@@ -164,30 +173,40 @@ genImagePageInfo (State { thumbnailRootPath, cache }) url = do
     let sortedImages = sort images
     let currentImage = folderPath </> takeFileName url
     let (Just index) = findIndex (==currentImage) sortedImages
-    let pageUrlFromIndex i = let imageName = sortedImages !! i
-                             in "/" ++ imageName ++ ".html"
+    
+    let fullImageUrlFromIndex = urlFromIndex sortedImages ".full"
+
+    let fullImageUrl = fullImageUrlFromIndex index
+
+    -- preloadImageUrls
+    let spread = 5
+    let maxIndex = length sortedImages - 1
+    let indexes = [cap 0 maxIndex i | i <- [index-spread..index+spread]]
+    let preloadImageUrls = map fullImageUrlFromIndex indexes
+
+    -- left/rightImagePageUrl
+    let pageUrlFromIndex = urlFromIndex sortedImages ".html"
 
     let leftImagePageUrl = case index == 0 of
                                 True -> Nothing
-                                False -> Just $ T.pack $ pageUrlFromIndex $ index - 1
-    let rightImagePageUrl = case index == (length sortedImages - 1) of
+                                False -> Just $ pageUrlFromIndex $ index - 1
+    let rightImagePageUrl = case index == maxIndex of
                                 True -> Nothing
-                                False -> Just $ T.pack $ pageUrlFromIndex $ index + 1
-
-    {-
-    
-    1. from image url, find folder
-    2. list all entries and filter images
-    3. sort images
-    4. find index of current image
-    5. -1 and +1 are left and right names
-
-    -}
+                                False -> Just $ pageUrlFromIndex $ index + 1
 
     return $ ImagePageInfo { folderUrl
                            , fullImageUrl
                            , leftImagePageUrl
-                           , rightImagePageUrl }
+                           , rightImagePageUrl
+                           , preloadImageUrls }
+
+urlFromIndex :: [FilePath] -> FilePath -> (Int -> T.Text)
+urlFromIndex sortedImages extension i = T.pack $ "/" ++ imageName ++ extension
+    where
+        imageName = sortedImages !! i
+
+cap :: Int -> Int -> Int -> Int
+cap mini maxi val = min (max mini val) maxi
 
 --------------------------------------------------------------------------------
 -- Full image request
