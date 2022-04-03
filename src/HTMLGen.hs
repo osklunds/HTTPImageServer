@@ -24,7 +24,8 @@ data ImagePageInfo = ImagePageInfo { folderUrl :: Text
                                    , fullImageUrl :: Text
                                    , leftImagePageUrl :: Maybe Text
                                    , rightImagePageUrl :: Maybe Text
-                                   , preloadImageUrls :: [Text]
+                                   , preloadFullImageUrls :: [Text]
+                                   , preloadImagePageUrls :: [Text]
                                    }
 
 genImagePage :: ImagePageInfo -> Text
@@ -34,13 +35,15 @@ genImagePage info = replaceList rawPage repList
                        , fullImageUrl
                        , leftImagePageUrl
                        , rightImagePageUrl
-                       , preloadImageUrls }) = info
+                       , preloadFullImageUrls
+                       , preloadImagePageUrls }) = info
 
         backgroundImageLink = fullImageUrl
         (leftButtonCursor, leftButtonOnclick) = genSideButton leftImagePageUrl
         (rightButtonCursor, rightButtonOnclick) = genSideButton rightImagePageUrl
         topButtonOnclick = genOnclick folderUrl
-        preloadImages = concatMap genPreloadImage preloadImageUrls
+        preloadFullImages = concatMap genPreloadFullImage preloadFullImageUrls
+        preloadImagePages = concatMap genPreloadImagePage preloadImagePageUrls
 
         rawPage = $(embedStringFile "html/image_page/image_page.html")
         repList = [("BACKGROUND_IMAGE_LINK", backgroundImageLink),
@@ -49,7 +52,8 @@ genImagePage info = replaceList rawPage repList
                    ("LEFT_BUTTON_ONCLICK", leftButtonOnclick),
                    ("RIGHT_BUTTON_ONCLICK", rightButtonOnclick),
                    ("TOP_BUTTON_ONCLICK", topButtonOnclick),
-                   ("PRELOAD_IMAGES", preloadImages)]
+                   ("PRELOAD_FULL_IMAGES", preloadFullImages),
+                   ("PRELOAD_IMAGE_PAGES", preloadImagePages)]
 
 genSideButton :: Maybe Text -> (Text, Text)
 genSideButton Nothing = ("", "")
@@ -61,11 +65,17 @@ genCursorPointer = "cursor: pointer;"
 genOnclick :: Text -> Text
 genOnclick url = T.concat ["onclick=\"window.location='", url, "';\""]
 
-genPreloadImage :: Text -> Text
-genPreloadImage imageUrl = replaceList rawPage repList
+genPreloadFullImage :: Text -> Text
+genPreloadFullImage fullImageUrl = replaceList rawPage repList
     where
-        rawPage = $(embedStringFile "html/image_page/preload_image.html")
-        repList = [("PRELOAD_IMG", imageUrl)]
+        rawPage = $(embedStringFile "html/image_page/preload_full_image.html")
+        repList = [("PRELOAD_FULL_IMAGE", fullImageUrl)]
+
+genPreloadImagePage :: Text -> Text
+genPreloadImagePage imagePageUrl = replaceList rawPage repList
+    where
+        rawPage = $(embedStringFile "html/image_page/preload_image_page.html")
+        repList = [("PRELOAD_IMAGE_PAGE", imagePageUrl)]
 
 --------------------------------------------------------------------------------
 -- Folder page
