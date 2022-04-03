@@ -14,7 +14,7 @@ where
 import Prelude hiding (concatMap)
 import Data.FileEmbed
 import qualified Data.Text as T
-import Data.Text (Text, append)
+import Data.Text (Text)
 
 --------------------------------------------------------------------------------
 -- Image page

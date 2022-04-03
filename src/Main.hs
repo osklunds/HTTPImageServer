@@ -1,18 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
+
 import Network.Wai
-import Network.HTTP.Types (status200)
+import Network.HTTP.Types
 import Network.HTTP.Types.Header
-import Network.Wai.Handler.Warp (run)
+import Network.Wai.Handler.Warp
 
-import Data.ByteString.Builder (lazyByteString, stringUtf8)
-import Blaze.ByteString.Builder (fromByteString, copyByteString)
-import System.FilePath (joinPath)
-import Data.Text as T (pack, unpack, Text)
-import qualified Data.ByteString as S
-import Text.Blaze.Html.Renderer.Utf8
-import Text.Blaze.Html
-
-import System.Directory
+import Blaze.ByteString.Builder
+import Data.Text (unpack)
+import System.FilePath
 import Control.Concurrent.MVar
 
 import CachedMap
@@ -29,7 +24,7 @@ mainWithArgs thumbRoot fullRoot = do
 app :: String -> String -> MVar Cache -> Application
 app thumbRoot fullRoot cache request respond = do
     let state = makeState thumbRoot fullRoot cache
-    let path = joinPath $ map T.unpack $ pathInfo request
+    let path = joinPath $ map unpack $ pathInfo request
     (page, pageType) <- handleRequest state path
     let httpHeaders = case pageType of
                                 Image ->

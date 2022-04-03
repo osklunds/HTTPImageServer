@@ -11,10 +11,9 @@ where
 import Data.List
 import Control.Monad
 import System.FilePath
-import Data.ByteString (ByteString, hGetContents, unpack)
+import Data.ByteString (ByteString, hGetContents)
 import System.IO (withBinaryFile, IOMode(..))
 import System.Directory
-import Data.String (fromString)
 import qualified Data.Text as T
 import Data.Text.Encoding
 import Control.Concurrent.MVar
@@ -42,36 +41,36 @@ folder/subfolder
 Generated URLs:
 folder
 folder/subfolder/anotherfolder
-folder/subfolder   <DATE> name1.png.jpg.html
-folder/subfolder   <DATE> name1.png.jpg.thumb
-folder/subfolder   <DATE> name2.png.jpg.html
-folder/subfolder   <DATE> name2.png.jpg.thumb
-folder/subfolder   <DATE> name3.png.jpg.html
-folder/subfolder   <DATE> name3.png.jpg.thumb
+folder/subfolder name1.png.jpg.html
+folder/subfolder name1.png.jpg.thumb
+folder/subfolder name2.png.jpg.html
+folder/subfolder name2.png.jpg.thumb
+folder/subfolder name3.png.jpg.html
+folder/subfolder name3.png.jpg.thumb
 
 # Img page
 
 ReqURL:
-folder/subfolder   <DATE> name2.png.jpg.html
+folder/subfolder name2.png.jpg.html
 
 Generated URLs:
 folder/subfolder
-folder/subfolder   <DATE> name1.png.jpg.html
-folder/subfolder   <DATE> name2.png.jpg.full
-folder/subfolder   <DATE> name3.png.jpg.html
+folder/subfolder name1.png.jpg.html
+folder/subfolder name2.png.jpg.full
+folder/subfolder name3.png.jpg.html
 
 # Thumbnail
 
 ReqURL:
-folder/subfolder   <DATE> name1.png.jpg.thumb
+folder/subfolder name1.png.jpg.thumb
 
 Path:
-folder/subfolder   <DATE> name1.png.jpg
+folder/subfolder name1.png.jpg
 
 # Full image
 
 ReqURL:
-folder/subfolder   <DATE> name1.png.jpg.full
+folder/subfolder name1.png.jpg.full
 
 Path:
 folder/subfolder/name1.png

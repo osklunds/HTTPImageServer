@@ -13,7 +13,6 @@ import Data.Map hiding (map)
 import Prelude hiding (map, lookup)
 import Data.Time.Clock
 
-
 type CachedMap k v = Map k (UTCTime, v)
 
 new :: CachedMap k v
