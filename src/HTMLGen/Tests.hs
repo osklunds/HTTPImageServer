@@ -1,25 +1,29 @@
 
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module HTMLGen.Tests where
+
+import Test.QuickCheck
+import Data.Text as T
 
 import HTMLGen
 
-generateImagePageTest = writeFile "test.html" html
-  where
-    html = generateImagePage parent leftImg curImg rightImg
-    parent = "overview"
-    leftImg = Just "img1"
-    curImg = "Images/img2.png"
-    rightImg = Just "img3"
 
-generateFolderPageTest = writeFile "test.html" html
-  where
-    html = generateFolderPage "current/path/is/this" "parent" imagePaths
-    imagePaths = ["Images/img1.png",
-                  "Images/img2.png",
-                  "Images/img3.png",
-                  "Images/img4.png",
-                  "Images/img5.png",
-                  "Images/img1.png",
-                  "Images/img2.png",
-                  "Images/img3.png"]
+prop_test = T.length (T.replicate 500000 (genImagePage input)) > 0
+    where
+        folderUrl = "folderUrl"
+        fullImageUrl = "fullImageUrl"
+        leftImagePageUrl = Just "leftImagePageUrl"
+        rightImagePageUrl = Just "rightImagePageUrl"
+        preloadImageUrls = ["preloadImageUrl1"]
+        input 2= ImagePageInfo { folderUrl
+                              , fullImageUrl
+                              , leftImagePageUrl
+                              , rightImagePageUrl
+                              , preloadImageUrls
+                              }
 
+return []
+runTests = $quickCheckAll

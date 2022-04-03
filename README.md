@@ -15,6 +15,6 @@
 
 # TODOs
 
-- Cache html too
+- Preload next page html too
 - Calculate position when going to parent rather than saving
 - Flicker-free switching (by using javascript?)
