@@ -12,3 +12,9 @@
     - If image
         - Create fullscreen image
         - Create left, up and down buttons
+
+# TODOs
+
+- Cache html too
+- Calculate position when going to parent rather than saving
+- Flicker-free switching (by using javascript?)

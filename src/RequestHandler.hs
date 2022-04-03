@@ -83,14 +83,6 @@ handleRequest :: State -> String -> IO (ByteString, PageType)
 handleRequest state pathWithExt = do
     let (path, ext) = splitExtension pathWithExt
 
-    let cacheMVar = cache state
-
-    cachee <- takeMVar cacheMVar
-
-    putStrLn $ "Request: " ++ pathWithExt
-
-    putMVar cacheMVar cachee
-
     let (handler, pageType) = case ext of
                                 "" -> (handleFolderPageRequest, Navigation)
                                 ".html" -> (handleImagePageRequest, Navigation)

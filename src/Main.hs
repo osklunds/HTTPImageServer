@@ -35,5 +35,5 @@ app thumbRoot fullRoot cache request respond = do
                                 Image ->
                                     [(hCacheControl, "public, max-age=31536000")]
                                 Navigation ->
-                                    [(hCacheControl, "no-store")]
+                                    [(hCacheControl, "public, max-age=600")]
     respond $ responseBuilder status200 httpHeaders $ copyByteString $ page
