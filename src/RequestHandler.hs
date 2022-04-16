@@ -78,17 +78,23 @@ folder/subfolder/name1.png
 
 data PageType = Navigation | Image
 
-handleRequest :: State -> String -> IO (ByteString, PageType)
+handleRequest :: State -> String -> IO (Maybe (ByteString, PageType))
 handleRequest state pathWithExt = do
     let (path, ext) = splitExtension pathWithExt
 
-    let (handler, pageType) = case ext of
-                                "" -> (handleFolderPageRequest, Navigation)
-                                ".html" -> (handleImagePageRequest, Navigation)
-                                ".full" -> (handleFullImageRequest, Image)
-                                ".thumb" -> (handleThumbnailRequest, Image)
-    page <- handler state path
-    return (page, pageType)
+    let result = case ext of
+                    "" -> Just (handleFolderPageRequest, Navigation)
+                    ".html" -> Just (handleImagePageRequest, Navigation)
+                    ".full" -> Just (handleFullImageRequest, Image)
+                    ".thumb" -> Just (handleThumbnailRequest, Image)
+                    _ -> Nothing
+
+    case result of
+        Just (handler, pageType) -> do
+            page <- handler state path
+            return $ Just (page, pageType)
+        Nothing ->
+            return Nothing
 
 --------------------------------------------------------------------------------
 -- Folder page request
