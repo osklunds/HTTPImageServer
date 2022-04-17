@@ -17,6 +17,7 @@ import System.Directory
 import qualified Data.Text as T
 import Data.Text.Encoding
 import Control.Concurrent.MVar
+import Control.Exception
 
 import HTMLGen
 import CachedMap
@@ -236,9 +237,16 @@ handleThumbnailRequest (State { thumbnailRootPath }) path =
 listDirectoryCached :: MVar Cache -> FilePath -> IO [FilePath]
 listDirectoryCached cacheMVar filePath = do
     cache <- takeMVar cacheMVar
-    let doListDirectory = do
-                            putStrLn $ "real list for: " ++ filePath
-                            listDirectory filePath
-    (newCache, entries) <- get filePath doListDirectory cache
-    putMVar cacheMVar newCache
-    return entries
+    let doListDirectory = listDirectory filePath
+    result <- myTry $ get filePath doListDirectory cache
+
+    case result of
+        Right (newCache, entries) -> do
+            putMVar cacheMVar newCache
+            return entries
+        Left exception -> do
+            putMVar cacheMVar cache
+            throw exception
+
+myTry :: IO a -> IO (Either SomeException a)
+myTry = try
