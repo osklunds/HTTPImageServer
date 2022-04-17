@@ -1,3 +1,4 @@
+
 # HTTPImageServer
 
 # Algorithm
@@ -18,4 +19,4 @@
 - Keyboard navigation
 - Swipe navigation
 - Calculate position when going to parent rather than saving
-- Flicker-free switching (by using javascript?)
+- Flicker-free switching (by using javascript or AJAX?)
