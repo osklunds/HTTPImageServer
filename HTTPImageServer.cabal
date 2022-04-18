@@ -21,6 +21,7 @@ executable HTTPImageServer
   main-is:             Main.hs
   ghc-options:
     "-Wno-missing-home-modules"
+    -O2
   other-modules:
     HTMLGen,
     RequestHandler
