@@ -9,12 +9,22 @@ import Blaze.ByteString.Builder
 import Data.Text (unpack)
 import System.FilePath
 import Control.Concurrent.MVar
+import System.Environment
 
 import CachedMap
 import RequestHandler
 
 main :: IO ()
-main = mainWithArgs "test/Thumbs" "test/Thumbs"
+main = do
+    args <- getArgs
+    let [thumbRoot, fullRoot] = args
+    putStrLn thumbRoot
+    putStrLn fullRoot
+
+    mainWithArgs thumbRoot fullRoot
+
+mainTest :: IO ()
+mainTest = mainWithArgs "test/Thumbs" "test/Thumbs"
 
 mainWithArgs :: String -> String -> IO ()
 mainWithArgs thumbRoot fullRoot = do
