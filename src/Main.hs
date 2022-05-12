@@ -17,19 +17,22 @@ import RequestHandler
 main :: IO ()
 main = do
     args <- getArgs
-    let [thumbRoot, fullRoot] = args
-    putStrLn thumbRoot
-    putStrLn fullRoot
+    let [thumbRoot, fullRoot, portString] = args
+    putStrLn $ "thumbail path: " ++ thumbRoot
+    putStrLn $ "full iamges path: " ++ fullRoot
+    putStrLn $ "port: " ++ portString
 
-    mainWithArgs thumbRoot fullRoot
+    let port = read portString
+
+    mainWithArgs thumbRoot fullRoot port
 
 mainTest :: IO ()
-mainTest = mainWithArgs "test/Thumbs" "test/Thumbs"
+mainTest = mainWithArgs "test/Thumbs" "test/Thumbs" 3000
 
-mainWithArgs :: String -> String -> IO ()
-mainWithArgs thumbRoot fullRoot = do
+mainWithArgs :: String -> String -> Int -> IO ()
+mainWithArgs thumbRoot fullRoot port = do
     cache <- newMVar new
-    run 3000 (app thumbRoot fullRoot cache)
+    run port (app thumbRoot fullRoot cache)
 
 app :: String -> String -> MVar Cache -> Application
 app thumbRoot fullRoot cache request respond = do
