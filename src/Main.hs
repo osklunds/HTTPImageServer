@@ -19,7 +19,7 @@ main = do
     args <- getArgs
     let [thumbRoot, fullRoot, portString] = args
     putStrLn $ "thumbail path: " ++ thumbRoot
-    putStrLn $ "full iamges path: " ++ fullRoot
+    putStrLn $ "full images path: " ++ fullRoot
     putStrLn $ "port: " ++ portString
 
     let port = read portString
