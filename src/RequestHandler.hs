@@ -119,7 +119,7 @@ genFolderPageInfo (State { thumbnailRootPath, cache }) path = do
     let sortedEntries = sort entries
     let entriesWithPath = map (path </>) sortedEntries
     folderUrlsStr <- filterM (isFolder . addThumbPath) entriesWithPath
-    let folderUrls = map T.pack folderUrlsStr
+    let folderUrls = map (T.pack . ("/" ++)) folderUrlsStr
 
     images <- filterM (isImage . addThumbPath) entriesWithPath
     
