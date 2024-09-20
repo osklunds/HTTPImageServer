@@ -7,6 +7,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import Control.Concurrent
 import Network.HTTP.Client
+import Data.ByteString.Lazy as LBS
 
 import Server
 
@@ -24,7 +25,7 @@ normalCases = do
 
     killThread serverThread
 
-    print $ responseBody response
+    LBS.putStr $ responseBody response
 
 
 return []
