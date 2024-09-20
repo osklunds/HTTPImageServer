@@ -10,12 +10,11 @@ import Network.HTTP.Client
 
 import Server
 
-prop_hej :: Property
-prop_hej = monadicIO $ do
-   run $ yo
+prop_normalCases :: Property
+prop_normalCases = monadicIO $ run $ normalCases
 
-yo :: IO ()
-yo = do
+normalCases :: IO ()
+normalCases = do
     serverThread <- forkIO $ mainWithArgs "Test/Thumbs" "Test/Thumbs" 12346
 
     manager <- newManager defaultManagerSettings
@@ -23,11 +22,9 @@ yo = do
     request <- parseRequest "http://127.0.0.1:12346"
     response <- httpLbs request manager
 
-    _ <- killThread serverThread
+    killThread serverThread
 
     print $ responseBody response
-    
-    return ()
 
 
 return []
