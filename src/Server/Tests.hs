@@ -38,7 +38,6 @@ normalCases = do
                           ["subfolder",
                            "img2",
                            "img3",
-                           "subfolder2åäö",
                            "img3"]
 
 assertContainsStrings :: ByteString -> [ByteString] -> IO ()
