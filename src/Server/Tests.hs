@@ -1,5 +1,6 @@
 
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Server.Tests where
 
@@ -9,10 +10,11 @@ import Control.Concurrent
 import Control.Monad
 import Network.HTTP.Client
 import Text.Regex.TDFA
+import Text.Regex.TDFA.ByteString
 import Control.Exception as CE
 import Data.List
 import Data.ByteString.Lazy as LBS (putStr)
-import Data.ByteString.Lazy.Char8 as LBS8 (unpack)
+import Data.ByteString.Lazy.Char8 as LBS8 
 
 import Server
 
@@ -32,32 +34,30 @@ normalCases = do
     -- LBS.putStr $ responseBody response
 
     let resp = responseBody response
-    assertContainsStrings (LBS8.unpack resp)
-                          ["img2",
+    assertContainsStrings resp
+                          ["subfolder",
+                           "img2",
                            "img3",
+                           "subfolder2åäö",
                            "img3"]
 
-assertContainsStrings :: String -> [String] -> IO ()
+assertContainsStrings :: ByteString -> [ByteString] -> IO ()
 assertContainsStrings haystack needles = do
     -- First check each individual string for easier debugging
-    forM_ needles (\needle -> if (needle `isInfixOf` haystack)
+    forM_ needles (\needle -> if haystack =~ needle
                       then return ()
                       else do
-                          let msg = "Could not find '" ++
-                                    needle ++
-                                    "' inside\n" ++
-                                    haystack
-                          throwIO (AssertionFailed msg))
+                          throwIO (AssertionFailed (LBS8.unpack needle)))
 
     -- Then check all at once to verify the order
     let opts = defaultCompOpt{multiline = False}
     let regex = makeRegexOpts opts
                               defaultExecOpt
-                              (intercalate ".*" needles)
+                              (LBS8.intercalate ".*" needles)
 
     if match regex haystack
        then return ()
-       else throwIO (AssertionFailed ("Regex not found in\n" ++ haystack))
+       else throwIO (AssertionFailed ("Regex not found"))
 
 
 return []

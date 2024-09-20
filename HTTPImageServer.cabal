@@ -22,6 +22,7 @@ executable HTTPImageServer
   ghc-options:
     "-Wno-missing-home-modules"
     -O2
+    -freverse-errors
   other-modules:
     HTMLGen,
     RequestHandler
