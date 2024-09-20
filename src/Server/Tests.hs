@@ -11,6 +11,7 @@ import Network.HTTP.Client
 import Text.Regex.TDFA
 import Control.Exception as CE
 import Data.List
+import Data.ByteString.Lazy as LBS (putStr)
 import Data.ByteString.Lazy.Char8 as LBS8 (unpack)
 
 import Server
@@ -27,6 +28,8 @@ normalCases = do
     request <- parseRequest "http://127.0.0.1:12346"
     response <- httpLbs request manager
     killThread serverThread
+
+    -- LBS.putStr $ responseBody response
 
     let resp = responseBody response
     assertContainsStrings (LBS8.unpack resp)
