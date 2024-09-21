@@ -14,7 +14,8 @@ import Text.Regex.TDFA.ByteString
 import Control.Exception as CE
 import Data.List
 import Data.ByteString.Lazy as LBS (putStr)
-import Data.ByteString.Lazy.Char8 as LBS8 
+import Data.ByteString.Lazy.Char8 (ByteString)
+import qualified Data.ByteString.Lazy.Char8 as LBS8 
 import System.IO.Temp
 import System.FilePath
 import System.Directory
@@ -45,6 +46,11 @@ normalCases thumbDir fullImageDir = do
 
     createDirectory $ thumbDir </> "onlyInThumbs"
     createDirectory $ fullImageDir </> "onlyInFull"
+
+    writeFile (thumbDir </> "level1_img.jpg") "level1_img_thumb"
+    writeFile (thumbDir </> "level2_img.jpg") "level2_img_thumb"
+    writeFile (fullImageDir </> "level1_img.jpg") "level1_img_full"
+    writeFile (fullImageDir </> "level2_img.jpg") "level2_img_full"
     
     serverThread <- forkIO $ mainWithArgs thumbDir fullImageDir 12346
 
@@ -65,24 +71,46 @@ normalCases thumbDir fullImageDir = do
         \</div>",
 
         -- Folder button 1
+        -- Only check all details once to avoid overspecifying in case of changes
         "<div class=\"folder_button\" onclick=\"window.location='/level1_1'\">\n\
         \    /level1_1\n\
         \</div>",
 
         -- Folder button 2
-        "<div class=\"folder_button\" onclick=\"window.location='/level1_2'\">\n\
-        \    /level1_2\n\
-        \</div>",
+        "folder_button",
+        "window.location",
+        "/level1_2",
+        "/level1_2",
 
         -- Folder button 3
-        "<div class=\"folder_button\" onclick=\"window.location='/level1_3'\">\n\
-        \    /level1_3\n\
-        \</div>",
+        "folder_button",
+        "window.location",
+        "/level1_3",
+        "/level1_3",
 
         -- Folder button onlyInThumbs
-        "<div class=\"folder_button\" onclick=\"window.location='/onlyInThumbs'\">\n\
-        \    /onlyInThumbs\n\
-        \</div>"
+        "folder_button",
+        "window.location",
+        "/onlyInThumbs",
+        "/onlyInThumbs",
+
+        -- level1_img
+        -- Only check all details once to avoid overspecifying in case of changes
+        "<link rel=\"preload\" href=\"/level1_img.jpg.thumb\" as=\"image\"/>\n\
+        \<div class=\"column\">\n\
+        \    <div class=\"image_container\" onclick=\"window.location='/level1_img.jpg.html';\">\n\
+        \        <img class=\"image\" loading=\"lazy\" src=\"/level1_img.jpg.thumb\" width=\"100%\">\n\
+        \    </div>\n\
+        \</div>",
+
+        -- level2_img
+        "preload",
+        "/level2_img.jpg.thumb",
+        "image_container",
+        "window.location",
+        "/level2_img.jpg.html",
+        "img class",
+        "/level2_img.jpg.thumb"
         ]
 
 assertContainsStrings :: ByteString -> [ByteString] -> IO ()
