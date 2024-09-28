@@ -19,6 +19,7 @@ import qualified Data.ByteString.Lazy.Char8 as LBS8
 import System.IO.Temp
 import System.FilePath
 import System.Directory
+import System.Timeout
 
 import Server
 
@@ -54,18 +55,18 @@ normalCases thumbDir fullImageDir = do
     writeFile (fullImageDir </> "level2_img.jpg") "level2_img_full"
     
     -- Start the server
-    serverThread <- forkIO $ mainWithArgs thumbDir fullImageDir 12346
+    serverThread <- forkIO $ do
+        -- TODO: Timeout is a hack to avoid port re-us issue. Find the proper
+        -- Way to kill this thread if parent thread dies
+        timeout 1000000 $ mainWithArgs thumbDir fullImageDir 12345
+        return ()
 
     -- Send requests
-    responseRootFolderPage <- request ""
     responseLevel11 <- request "/level1_1"
-    LBS.putStr $ responseLevel11
-
-    -- Stop the server
-    killThread serverThread
+    responseLevel11_22 <- request "/level1_1/level2_2"
 
     -- Check responses
-    assertContainsStrings responseRootFolderPage [
+    assertResponseContainsStrings "" [
         -- Top button
         "<div class=\"top_button\" height=\"30px\" >\n\
         \/\n\
