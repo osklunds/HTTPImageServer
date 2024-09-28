@@ -49,10 +49,10 @@ normalCases thumbDir fullImageDir = do
     createDirectory $ thumbDir </> "onlyInThumbs"
     createDirectory $ fullImageDir </> "onlyInFull"
 
-    writeFile (thumbDir </> "level1_img.jpg") "level1_img_thumb"
-    writeFile (thumbDir </> "level2_img.jpg") "level2_img_thumb"
-    writeFile (fullImageDir </> "level1_img.jpg") "level1_img_full"
-    writeFile (fullImageDir </> "level2_img.jpg") "level2_img_full"
+    writeFile (thumbDir </> "level1_img.jpg") "content_of_level1_img_thumb"
+    writeFile (thumbDir </> "level2_img.jpg") "content_of_level2_img_thumb"
+    writeFile (fullImageDir </> "level1_img.jpg") "content_of_level1_img_full"
+    writeFile (fullImageDir </> "level2_img.jpg") "content_of_level2_img_full"
     
     -- Start the server
     serverThread <- forkIO $ do
@@ -61,7 +61,7 @@ normalCases thumbDir fullImageDir = do
         timeout 1000000 $ mainWithArgs thumbDir fullImageDir 12345
         return ()
 
-    -- Check responses
+    -- Check responses folder pages
     assertResponseContainsStrings "" [
         -- Top button
         "<div class=\"top_button\" height=\"30px\" >\n\
@@ -176,8 +176,26 @@ normalCases thumbDir fullImageDir = do
        \</div>"
        ]
 
+    -- Check responses image pages
+    assertResponseContainsStrings "/level1_img.jpg.html" [
+        -- The image itself
+        "background-image: url\\(\"/./level1_img.jpg.full\"\\);",
+
+        -- Navigation buttons
+        "<div class=\"left_button\" ></div>",
+        "<div class=\"top_button\" onclick=\"window.location='/.';\"></div>",
+        "<div class=\"right_button\" onclick=\"window.location='/./level2_img.jpg.html';\"></div>",
+
+        -- Preload of neighbor images
+        "<link rel=\"preload\" href=\"/./level1_img.jpg.full\" as=\"image\"/>",
+
+        -- Preload of neighbor pages
+        "<link rel=\"preload\" href=\"/./level1_img.jpg.html\" as=\"image\"/>"
+        ]
+
     -- TODO: Paths that don't exist
     -- TODO: Fail test if server crashes. If it returns, can kill parent thread
+    -- TODO: Enough images to test caching of neighbors
     
     -- Stop the server
     killThread serverThread
@@ -197,6 +215,7 @@ request path = do
 
 assertContainsStrings :: ByteString -> [ByteString] -> IO ()
 assertContainsStrings haystack needles = do
+    -- TODO: regex-quote each needle
     -- First check each individual string for easier debugging
     forM_ needles (\needle -> if haystack =~ needle
                       then return ()
