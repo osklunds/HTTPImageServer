@@ -61,10 +61,6 @@ normalCases thumbDir fullImageDir = do
         timeout 1000000 $ mainWithArgs thumbDir fullImageDir 12345
         return ()
 
-    -- Send requests
-    responseLevel11 <- request "/level1_1"
-    responseLevel11_22 <- request "/level1_1/level2_2"
-
     -- Check responses
     assertResponseContainsStrings "" [
         -- Top button
@@ -116,6 +112,89 @@ normalCases thumbDir fullImageDir = do
         "/level2_img.jpg.thumb"
         ]
 
+    assertResponseContainsStrings "/level1_1" [
+       -- Top button
+       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/.';\">\n\
+       \/level1_1\n\
+       \\n\
+       \</div>",
+
+       -- Folder button 2_1
+       "folder_button",
+       "window.location",
+       "/level1_1/level2_1",
+       "/level1_1/level2_1",
+
+       -- Folder button 2_2
+       "folder_button",
+       "window.location",
+       "/level1_1/level2_2",
+       "/level1_1/level2_2"
+       ]
+
+    assertResponseContainsStrings "/level1_1/level2_1" [
+       -- Top button
+       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1';\">\n\
+       \/level1_1/level2_1\n\
+       \\n\
+       \</div>"
+       ]
+
+    assertResponseContainsStrings "/level1_1/level2_2" [
+       -- Top button
+       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1';\">\n\
+       \/level1_1/level2_2\n\
+       \\n\
+       \</div>",
+
+       -- Folder button 3
+       "folder_button",
+       "window.location",
+       "/level1_1/level2_2/level3",
+       "/level1_1/level2_2/level3"
+       ]
+
+    assertResponseContainsStrings "/level1_1/level2_2/level3" [
+       -- Top button
+       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1/level2_2';\">\n\
+       \/level1_1/level2_2/level3\n\
+       \\n\
+       \</div>",
+
+       -- Folder button 4
+       "folder_button",
+       "window.location",
+       "/level1_1/level2_2/level3/level4",
+       "/level1_1/level2_2/level3/level4"
+       ]
+
+    assertResponseContainsStrings "/onlyInThumbs" [
+       -- Top button
+       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/.';\">\n\
+       \/onlyInThumbs\n\
+       \\n\
+       \</div>"
+       ]
+
+    -- TODO: Paths that don't exist
+    -- TODO: Fail test if server crashes. If it returns, can kill parent thread
+    
+    -- Stop the server
+    killThread serverThread
+
+assertResponseContainsStrings :: String -> [ByteString] -> IO ()
+assertResponseContainsStrings path needles = do
+    response <- request path
+    -- LBS.putStr response
+    assertContainsStrings response needles
+
+request :: String -> IO ByteString
+request path = do
+    manager <- newManager defaultManagerSettings
+    request <- parseRequest $ "http://127.0.0.1:12345" ++ path
+    response <- httpLbs request manager
+    return $ responseBody response
+
 assertContainsStrings :: ByteString -> [ByteString] -> IO ()
 assertContainsStrings haystack needles = do
     -- First check each individual string for easier debugging
@@ -133,13 +212,6 @@ assertContainsStrings haystack needles = do
     if match regex haystack
        then return ()
        else throwIO (AssertionFailed ("Regex not found"))
-
-request :: String -> IO ByteString
-request path = do
-    manager <- newManager defaultManagerSettings
-    request <- parseRequest $ "http://127.0.0.1:12346" ++ path
-    response <- httpLbs request manager
-    return $ responseBody response
 
 
 return []
