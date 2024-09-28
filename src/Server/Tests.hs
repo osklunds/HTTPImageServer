@@ -30,6 +30,7 @@ prop_normalCases = monadicIO $ run $ do
 
 normalCases :: FilePath -> FilePath -> IO ()
 normalCases thumbDir fullImageDir = do
+    -- Create directories and images
     forM_ [thumbDir, fullImageDir]
           (\dir -> do
                        createDirectory $ dir </> "level1_1"
@@ -52,18 +53,19 @@ normalCases thumbDir fullImageDir = do
     writeFile (fullImageDir </> "level1_img.jpg") "level1_img_full"
     writeFile (fullImageDir </> "level2_img.jpg") "level2_img_full"
     
+    -- Start the server
     serverThread <- forkIO $ mainWithArgs thumbDir fullImageDir 12346
 
-    manager <- newManager defaultManagerSettings
+    -- Send requests
+    responseRootFolderPage <- request ""
+    responseLevel11 <- request "/level1_1"
+    LBS.putStr $ responseLevel11
 
-    request <- parseRequest "http://127.0.0.1:12346"
-    response <- httpLbs request manager
+    -- Stop the server
     killThread serverThread
 
-    LBS.putStr $ responseBody response
-
-    let resp = responseBody response
-    assertContainsStrings resp [
+    -- Check responses
+    assertContainsStrings responseRootFolderPage [
         -- Top button
         "<div class=\"top_button\" height=\"30px\" >\n\
         \/\n\
@@ -130,6 +132,13 @@ assertContainsStrings haystack needles = do
     if match regex haystack
        then return ()
        else throwIO (AssertionFailed ("Regex not found"))
+
+request :: String -> IO ByteString
+request path = do
+    manager <- newManager defaultManagerSettings
+    request <- parseRequest $ "http://127.0.0.1:12346" ++ path
+    response <- httpLbs request manager
+    return $ responseBody response
 
 
 return []
