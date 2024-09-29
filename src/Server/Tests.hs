@@ -193,6 +193,23 @@ normalCases thumbDir fullImageDir = do
         "<link rel=\"preload\" href=\"/./level1_img.jpg.html\" as=\"image\"/>"
         ]
 
+    assertResponseContainsStrings "/level2_img.jpg.html" [
+        -- The image itself
+        "background-image: url\\(\"/./level2_img.jpg.full\"\\);",
+
+        -- Navigation buttons
+        "<div class=\"left_button\" onclick=\"window.location='/./level1_img.jpg.html';\"></div>",
+        "<div class=\"top_button\" onclick=\"window.location='/.';\"></div>",
+        "<div class=\"right_button\" ></div>",
+
+        -- Preload of neighbor images
+        "<link rel=\"preload\" href=\"/./level2_img.jpg.full\" as=\"image\"/>",
+
+        -- Preload of neighbor pages
+        "<link rel=\"preload\" href=\"/./level2_img.jpg.html\" as=\"image\"/>"
+        ]
+
+
     -- TODO: Paths that don't exist
     -- TODO: Fail test if server crashes. If it returns, can kill parent thread
     -- TODO: Enough images to test caching of neighbors
