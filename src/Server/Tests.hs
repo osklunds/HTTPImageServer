@@ -385,7 +385,7 @@ prop_normalCases = runTest $ do
 --------------------------------------------------------------------------------
     
 runTest :: IO () -> Property
-runTest testFunc = monadicIO $ run $ do
+runTest testFunc = once $ monadicIO $ run $ do
     withSystemTempDirectory "normalCases" (\thumbDir -> do
         withSystemTempDirectory "normalCases" (\fullImageDir -> do
             createFoldersAndFiles thumbDir fullImageDir
