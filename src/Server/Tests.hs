@@ -28,14 +28,7 @@ import Server
 -- Tests
 --------------------------------------------------------------------------------
 
--- This test is quite big, but it's a compromise between
--- 1. Having an interesting file structure
--- 2. Arranging and asserting names at the same scope
--- 3. Having one test per concept
--- In this test, 3 was sacrificed in favor of 1 and 2
-prop_normalCases :: Property
-prop_normalCases = runTest $ do
-    -- Check responses folder pages
+prop_rootFolderPage = runTest $ do
     assertResponseContainsStrings "" [
         -- Top button
         "<div class=\"top_button\" height=\"30px\" >\n\
@@ -86,6 +79,7 @@ prop_normalCases = runTest $ do
         "/level1_img2.jpg.thumb"
         ]
 
+prop_level1FolderPage = runTest $ do
     assertResponseContainsStrings "/level1_1" [
        -- Top button
        "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/.';\">\n\
@@ -106,6 +100,7 @@ prop_normalCases = runTest $ do
        "/level1_1/level2_2"
        ]
 
+prop_level2FolderPage = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_1" [
        -- Top button
        "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1';\">\n\
@@ -128,6 +123,7 @@ prop_normalCases = runTest $ do
        "/level1_1/level2_2/level3"
        ]
 
+prop_level3FolderPage = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_2/level3" [
        -- Top button
        "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1/level2_2';\">\n\
@@ -142,6 +138,7 @@ prop_normalCases = runTest $ do
        "/level1_1/level2_2/level3/level4"
        ]
 
+prop_folderOnlyInThumbsFolderParentFolderPage = runTest $ do
     assertResponseContainsStrings "/onlyInThumbs" [
        -- Top button
        "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/.';\">\n\
@@ -150,7 +147,7 @@ prop_normalCases = runTest $ do
        \</div>"
        ]
 
-    -- Check responses image pages
+prop_imagePageOneOfTwo = runTest $ do
     assertResponseContainsStrings "/level1_img1.jpg.html" [
         -- The image itself
         "background-image: url\\(\"/./level1_img1.jpg.full\"\\);",
@@ -167,6 +164,7 @@ prop_normalCases = runTest $ do
         "<link rel=\"preload\" href=\"/./level1_img1.jpg.html\" as=\"image\"/>"
         ]
 
+prop_imagePageTwoOfTwo = runTest $ do
     assertResponseContainsStrings "/level1_img2.jpg.html" [
         -- The image itself
         "background-image",
@@ -186,7 +184,7 @@ prop_normalCases = runTest $ do
         "/./level1_img2.jpg.html"
         ]
 
-    -- One image
+prop_imagePageOnlyOneImage = runTest $ do
     assertResponseContainsStrings "/level1_1/level11_img.jpg.html" [
         -- The image itself
         "background-image",
@@ -199,7 +197,7 @@ prop_normalCases = runTest $ do
         "<div class=\"right_button\" ></div>"
         ]
 
-    -- Images so that all preloads are different
+prop_imagePageFirstOfMany = runTest $ do
     assertResponseContainsStrings "/level1_2/level12_img1.jpg.html" [
         -- The image itself
         "background-image",
@@ -244,6 +242,7 @@ prop_normalCases = runTest $ do
         "/level1_2/level12_img6.jpg.html"
         ]
 
+prop_imagePageSecondOfMany = runTest $ do
     assertResponseContainsStrings "/level1_2/level12_img2.jpg.html" [
         -- The image itself
         "background-image",
@@ -289,6 +288,7 @@ prop_normalCases = runTest $ do
         "/level1_2/level12_img7.jpg.html"
         ]
 
+prop_imagePageMiddleOfMany = runTest $ do
     assertResponseContainsStrings "/level1_2/level12_img7.jpg.html" [
         -- The image itself
         "background-image",
@@ -334,6 +334,7 @@ prop_normalCases = runTest $ do
         "/level1_2/level12_imgC.jpg.html"
         ]
 
+prop_imagePageLastOfMany = runTest $ do
     assertResponseContainsStrings "/level1_2/level12_imgD.jpg.html" [
         -- The image itself
         "background-image",
@@ -445,7 +446,7 @@ createFoldersAndFiles thumbDir fullImageDir = do
 assertResponseContainsStrings :: String -> [ByteString] -> IO ()
 assertResponseContainsStrings path needles = do
     response <- request path
-    LBS.putStr response
+    -- LBS.putStr response
     assertContainsStrings response needles
 
 request :: String -> IO ByteString
