@@ -49,10 +49,10 @@ normalCases thumbDir fullImageDir = do
     createDirectory $ thumbDir </> "onlyInThumbs"
     createDirectory $ fullImageDir </> "onlyInFull"
 
-    writeFile (thumbDir </> "level1_img.jpg") "content_of_level1_img_thumb"
-    writeFile (thumbDir </> "level2_img.jpg") "content_of_level2_img_thumb"
-    writeFile (fullImageDir </> "level1_img.jpg") "content_of_level1_img_full"
-    writeFile (fullImageDir </> "level2_img.jpg") "content_of_level2_img_full"
+    writeFile (thumbDir </> "level1_img1.jpg") "content_of_level1_img1_thumb"
+    writeFile (thumbDir </> "level1_img2.jpg") "content_of_level1_img2_thumb"
+    writeFile (fullImageDir </> "level1_img1.jpg") "content_of_level1_img1_full"
+    writeFile (fullImageDir </> "level1_img2.jpg") "content_of_level1_img2_full"
     
     -- Start the server
     serverThread <- forkIO $ do
@@ -93,23 +93,23 @@ normalCases thumbDir fullImageDir = do
         "/onlyInThumbs",
         "/onlyInThumbs",
 
-        -- level1_img
+        -- level1_img1
         -- Only check all details once to avoid overspecifying in case of changes
-        "<link rel=\"preload\" href=\"/level1_img.jpg.thumb\" as=\"image\"/>\n\
+        "<link rel=\"preload\" href=\"/level1_img1.jpg.thumb\" as=\"image\"/>\n\
         \<div class=\"column\">\n\
-        \    <div class=\"image_container\" onclick=\"window.location='/level1_img.jpg.html';\">\n\
-        \        <img class=\"image\" loading=\"lazy\" src=\"/level1_img.jpg.thumb\" width=\"100%\">\n\
+        \    <div class=\"image_container\" onclick=\"window.location='/level1_img1.jpg.html';\">\n\
+        \        <img class=\"image\" loading=\"lazy\" src=\"/level1_img1.jpg.thumb\" width=\"100%\">\n\
         \    </div>\n\
         \</div>",
 
-        -- level2_img
+        -- level1_img2
         "preload",
-        "/level2_img.jpg.thumb",
+        "/level1_img2.jpg.thumb",
         "image_container",
         "window.location",
-        "/level2_img.jpg.html",
+        "/level1_img2.jpg.html",
         "img class",
-        "/level2_img.jpg.thumb"
+        "/level1_img2.jpg.thumb"
         ]
 
     assertResponseContainsStrings "/level1_1" [
@@ -177,36 +177,36 @@ normalCases thumbDir fullImageDir = do
        ]
 
     -- Check responses image pages
-    assertResponseContainsStrings "/level1_img.jpg.html" [
+    assertResponseContainsStrings "/level1_img1.jpg.html" [
         -- The image itself
-        "background-image: url\\(\"/./level1_img.jpg.full\"\\);",
+        "background-image: url\\(\"/./level1_img1.jpg.full\"\\);",
 
         -- Navigation buttons
         "<div class=\"left_button\" ></div>",
         "<div class=\"top_button\" onclick=\"window.location='/.';\"></div>",
-        "<div class=\"right_button\" onclick=\"window.location='/./level2_img.jpg.html';\"></div>",
+        "<div class=\"right_button\" onclick=\"window.location='/./level1_img2.jpg.html';\"></div>",
 
         -- Preload of neighbor images
-        "<link rel=\"preload\" href=\"/./level1_img.jpg.full\" as=\"image\"/>",
+        "<link rel=\"preload\" href=\"/./level1_img1.jpg.full\" as=\"image\"/>",
 
         -- Preload of neighbor pages
-        "<link rel=\"preload\" href=\"/./level1_img.jpg.html\" as=\"image\"/>"
+        "<link rel=\"preload\" href=\"/./level1_img1.jpg.html\" as=\"image\"/>"
         ]
 
-    assertResponseContainsStrings "/level2_img.jpg.html" [
+    assertResponseContainsStrings "/level1_img2.jpg.html" [
         -- The image itself
-        "background-image: url\\(\"/./level2_img.jpg.full\"\\);",
+        "background-image: url\\(\"/./level1_img2.jpg.full\"\\);",
 
         -- Navigation buttons
-        "<div class=\"left_button\" onclick=\"window.location='/./level1_img.jpg.html';\"></div>",
+        "<div class=\"left_button\" onclick=\"window.location='/./level1_img1.jpg.html';\"></div>",
         "<div class=\"top_button\" onclick=\"window.location='/.';\"></div>",
         "<div class=\"right_button\" ></div>",
 
         -- Preload of neighbor images
-        "<link rel=\"preload\" href=\"/./level2_img.jpg.full\" as=\"image\"/>",
+        "<link rel=\"preload\" href=\"/./level1_img2.jpg.full\" as=\"image\"/>",
 
         -- Preload of neighbor pages
-        "<link rel=\"preload\" href=\"/./level2_img.jpg.html\" as=\"image\"/>"
+        "<link rel=\"preload\" href=\"/./level1_img2.jpg.html\" as=\"image\"/>"
         ]
 
 
@@ -220,7 +220,7 @@ normalCases thumbDir fullImageDir = do
 assertResponseContainsStrings :: String -> [ByteString] -> IO ()
 assertResponseContainsStrings path needles = do
     response <- request path
-    -- LBS.putStr response
+    LBS.putStr response
     assertContainsStrings response needles
 
 request :: String -> IO ByteString
