@@ -420,6 +420,34 @@ prop_thumbImage_level4 = runTest $ do
         "^content_of_level4_thumb_img$"
         ]
 
+prop_fullImage_rootLevel = runTest $ do
+    assertResponseContainsStrings "/root_level_img1.jpg.full" [
+        "^content_of_root_level_img1_full$"
+        ]
+    assertResponseContainsStrings "/root_level_img2.jpg.full" [
+        "^content_of_root_level_img2_full$"
+        ]
+
+prop_fullImage_level1 = runTest $ do
+    assertResponseContainsStrings "/level1_1/level11_img.jpg.full" [
+        "^content_of_level11_img_full$"
+        ]
+
+prop_fullImage_level2 = runTest $ do
+    assertResponseContainsStrings "/level1_1/level2_2/level2_img.jpg.full" [
+        "^full size version of the thumbnail content$"
+        ]
+
+prop_fullImage_level3 = runTest $ do
+    assertResponseContainsStrings "/level1_1/level2_2/level3/just_a_name.jpg.full" [
+        "^content_of_level3_full_img$"
+        ]
+
+prop_fullImage_level4 = runTest $ do
+    assertResponseContainsStrings "/level1_1/level2_2/level3/level4/just_a_name.jpg.full" [
+        "^content_of_level4_full_img$"
+        ]
+
 --------------------------------------------------------------------------------
 -- Helpers
 --------------------------------------------------------------------------------
