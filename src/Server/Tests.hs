@@ -60,23 +60,23 @@ prop_folderPage_root = runTest $ do
         "/onlyInThumbs",
         "/onlyInThumbs",
 
-        -- level1_img1
+        -- root_level_img1
         -- Only check all details once to avoid overspecifying in case of changes
-        "<link rel=\"preload\" href=\"/level1_img1.jpg.thumb\" as=\"image\"/>\n\
+        "<link rel=\"preload\" href=\"/root_level_img1.jpg.thumb\" as=\"image\"/>\n\
         \<div class=\"column\">\n\
-        \    <div class=\"image_container\" onclick=\"window.location='/level1_img1.jpg.html';\">\n\
-        \        <img class=\"image\" loading=\"lazy\" src=\"/level1_img1.jpg.thumb\" width=\"100%\">\n\
+        \    <div class=\"image_container\" onclick=\"window.location='/root_level_img1.jpg.html';\">\n\
+        \        <img class=\"image\" loading=\"lazy\" src=\"/root_level_img1.jpg.thumb\" width=\"100%\">\n\
         \    </div>\n\
         \</div>",
 
-        -- level1_img2
+        -- root_level_img2
         "preload",
-        "/level1_img2.jpg.thumb",
+        "/root_level_img2.jpg.thumb",
         "image_container",
         "window.location",
-        "/level1_img2.jpg.html",
+        "/root_level_img2.jpg.html",
         "img class",
-        "/level1_img2.jpg.thumb"
+        "/root_level_img2.jpg.thumb"
         ]
 
 prop_folderPage_level1 = runTest $ do
@@ -157,40 +157,40 @@ prop_folderPage_onlyInThumbs = runTest $ do
        ]
 
 prop_imagePage_1Of2 = runTest $ do
-    assertResponseContainsStrings "/level1_img1.jpg.html" [
+    assertResponseContainsStrings "/root_level_img1.jpg.html" [
         -- The image itself
-        "background-image: url\\(\"/./level1_img1.jpg.full\"\\);",
+        "background-image: url\\(\"/./root_level_img1.jpg.full\"\\);",
 
         -- Navigation buttons
         "<div class=\"left_button\" ></div>",
         "<div class=\"top_button\" onclick=\"window.location='/.';\"></div>",
-        "<div class=\"right_button\" onclick=\"window.location='/./level1_img2.jpg.html';\"></div>",
+        "<div class=\"right_button\" onclick=\"window.location='/./root_level_img2.jpg.html';\"></div>",
 
         -- Preload of neighbor images
-        "<link rel=\"preload\" href=\"/./level1_img2.jpg.full\" as=\"image\"/>",
+        "<link rel=\"preload\" href=\"/./root_level_img2.jpg.full\" as=\"image\"/>",
 
         -- Preload of neighbor pages
-        "<link rel=\"preload\" href=\"/./level1_img2.jpg.html\" as=\"image\"/>"
+        "<link rel=\"preload\" href=\"/./root_level_img2.jpg.html\" as=\"image\"/>"
         ]
 
 prop_imagePage_2Of2 = runTest $ do
-    assertResponseContainsStrings "/level1_img2.jpg.html" [
+    assertResponseContainsStrings "/root_level_img2.jpg.html" [
         -- The image itself
         "background-image",
-        "/./level1_img2.jpg.full",
+        "/./root_level_img2.jpg.full",
 
         -- Navigation buttons
         "left_button",
-        "'/./level1_img1.jpg.html'",
+        "'/./root_level_img1.jpg.html'",
         "top_button",
         "'/.'",
         "<div class=\"right_button\" ></div>",
 
         -- Preload of neighbor images
         "preload",
-        "/./level1_img1.jpg.full",
+        "/./root_level_img1.jpg.full",
         "preload",
-        "/./level1_img1.jpg.html"
+        "/./root_level_img1.jpg.html"
         ]
 
 prop_imagePage_1Of1 = runTest $ do
@@ -390,12 +390,17 @@ prop_imagePage_lastOfMany = runTest $ do
 
     -- TODO: Paths that don't exist
 
-prop_thumbImage_level1 = runTest $ do
-    assertResponseContainsStrings "/level1_img1.jpg.thumb" [
-        "^content_of_level1_img1_thumb$"
+prop_thumbImage_rootLevel = runTest $ do
+    assertResponseContainsStrings "/root_level_img1.jpg.thumb" [
+        "^content_of_root_level_img1_thumb$"
         ]
-    assertResponseContainsStrings "/level1_img2.jpg.thumb" [
-        "^content_of_level1_img2_thumb$"
+    assertResponseContainsStrings "/root_level_img2.jpg.thumb" [
+        "^content_of_root_level_img2_thumb$"
+        ]
+
+prop_thumbImage_level1 = runTest $ do
+    assertResponseContainsStrings "/level1_1/level11_img.jpg.thumb" [
+        "^content_of_level11_img_thumb$"
         ]
 
 --------------------------------------------------------------------------------
@@ -435,11 +440,17 @@ createFoldersAndFiles thumbDir fullImageDir = do
     createDirectory $ thumbDir </> "onlyInThumbs"
     createDirectory $ fullImageDir </> "onlyInFull"
 
-    writeFile (thumbDir </> "level1_img1.jpg") "content_of_level1_img1_thumb"
-    writeFile (thumbDir </> "level1_img2.jpg") "content_of_level1_img2_thumb"
-    writeFile (fullImageDir </> "level1_img1.jpg") "content_of_level1_img1_full"
-    writeFile (fullImageDir </> "level1_img2.jpg") "content_of_level1_img2_full"
+    -- Images in root level
+    writeFile (thumbDir </> "root_level_img1.jpg")
+              "content_of_root_level_img1_thumb"
+    writeFile (thumbDir </> "root_level_img2.jpg")
+              "content_of_root_level_img2_thumb"
+    writeFile (fullImageDir </> "root_level_img1.jpg")
+              "content_of_root_level_img1_full"
+    writeFile (fullImageDir </> "root_level_img2.jpg")
+              "content_of_root_level_img2_full"
 
+    -- Images in level 1
     writeFile (thumbDir </> "level1_1" </> "level11_img.jpg")
               "content_of_level11_img_thumb"
     writeFile (fullImageDir </> "level1_1" </> "level11_img.jpg")
