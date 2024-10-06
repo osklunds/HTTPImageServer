@@ -28,7 +28,7 @@ import Server
 -- Tests
 --------------------------------------------------------------------------------
 
-prop_rootFolderPage = runTest $ do
+prop_folderPage_root = runTest $ do
     assertResponseContainsStrings "" [
         -- Top button
         "<div class=\"top_button\" height=\"30px\" >\n\
@@ -79,7 +79,7 @@ prop_rootFolderPage = runTest $ do
         "/level1_img2.jpg.thumb"
         ]
 
-prop_level1FolderPage = runTest $ do
+prop_folderPage_level1 = runTest $ do
     assertResponseContainsStrings "/level1_1" [
        -- Top button
        "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/.';\">\n\
@@ -100,7 +100,7 @@ prop_level1FolderPage = runTest $ do
        "/level1_1/level2_2"
        ]
 
-prop_level2FolderPage = runTest $ do
+prop_folderPage_level2 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_1" [
        -- Top button
        "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1';\">\n\
@@ -123,7 +123,7 @@ prop_level2FolderPage = runTest $ do
        "/level1_1/level2_2/level3"
        ]
 
-prop_level3FolderPage = runTest $ do
+prop_folderPage_level3 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_2/level3" [
        -- Top button
        "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1/level2_2';\">\n\
@@ -138,7 +138,16 @@ prop_level3FolderPage = runTest $ do
        "/level1_1/level2_2/level3/level4"
        ]
 
-prop_folderOnlyInThumbsFolderParentFolderPage = runTest $ do
+prop_folderPage_level4 = runTest $ do
+    assertResponseContainsStrings "/level1_1/level2_2/level3/level4" [
+       -- Top button
+       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1/level2_2/level3';\">\n\
+       \/level1_1/level2_2/level3/level4\n\
+       \\n\
+       \</div>"
+       ]
+
+prop_folderPage_onlyInThumbs = runTest $ do
     assertResponseContainsStrings "/onlyInThumbs" [
        -- Top button
        "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/.';\">\n\
@@ -147,7 +156,7 @@ prop_folderOnlyInThumbsFolderParentFolderPage = runTest $ do
        \</div>"
        ]
 
-prop_imagePageOneOfTwo = runTest $ do
+prop_imagePage_1Of2 = runTest $ do
     assertResponseContainsStrings "/level1_img1.jpg.html" [
         -- The image itself
         "background-image: url\\(\"/./level1_img1.jpg.full\"\\);",
@@ -158,13 +167,13 @@ prop_imagePageOneOfTwo = runTest $ do
         "<div class=\"right_button\" onclick=\"window.location='/./level1_img2.jpg.html';\"></div>",
 
         -- Preload of neighbor images
-        "<link rel=\"preload\" href=\"/./level1_img1.jpg.full\" as=\"image\"/>",
+        "<link rel=\"preload\" href=\"/./level1_img2.jpg.full\" as=\"image\"/>",
 
         -- Preload of neighbor pages
-        "<link rel=\"preload\" href=\"/./level1_img1.jpg.html\" as=\"image\"/>"
+        "<link rel=\"preload\" href=\"/./level1_img2.jpg.html\" as=\"image\"/>"
         ]
 
-prop_imagePageTwoOfTwo = runTest $ do
+prop_imagePage_2Of2 = runTest $ do
     assertResponseContainsStrings "/level1_img2.jpg.html" [
         -- The image itself
         "background-image",
@@ -179,12 +188,12 @@ prop_imagePageTwoOfTwo = runTest $ do
 
         -- Preload of neighbor images
         "preload",
-        "/./level1_img2.jpg.full",
+        "/./level1_img1.jpg.full",
         "preload",
-        "/./level1_img2.jpg.html"
+        "/./level1_img1.jpg.html"
         ]
 
-prop_imagePageOnlyOneImage = runTest $ do
+prop_imagePage_1Of1 = runTest $ do
     assertResponseContainsStrings "/level1_1/level11_img.jpg.html" [
         -- The image itself
         "background-image",
@@ -197,7 +206,7 @@ prop_imagePageOnlyOneImage = runTest $ do
         "<div class=\"right_button\" ></div>"
         ]
 
-prop_imagePageFirstOfMany = runTest $ do
+prop_imagePage_1OfMany = runTest $ do
     assertResponseContainsStrings "/level1_2/level12_img1.jpg.html" [
         -- The image itself
         "background-image",
@@ -242,7 +251,7 @@ prop_imagePageFirstOfMany = runTest $ do
         "/level1_2/level12_img6.jpg.html"
         ]
 
-prop_imagePageSecondOfMany = runTest $ do
+prop_imagePage_2OfMany = runTest $ do
     assertResponseContainsStrings "/level1_2/level12_img2.jpg.html" [
         -- The image itself
         "background-image",
@@ -288,7 +297,7 @@ prop_imagePageSecondOfMany = runTest $ do
         "/level1_2/level12_img7.jpg.html"
         ]
 
-prop_imagePageMiddleOfMany = runTest $ do
+prop_imagePage_middleOfMany = runTest $ do
     assertResponseContainsStrings "/level1_2/level12_img7.jpg.html" [
         -- The image itself
         "background-image",
@@ -334,7 +343,7 @@ prop_imagePageMiddleOfMany = runTest $ do
         "/level1_2/level12_imgC.jpg.html"
         ]
 
-prop_imagePageLastOfMany = runTest $ do
+prop_imagePage_lastOfMany = runTest $ do
     assertResponseContainsStrings "/level1_2/level12_imgD.jpg.html" [
         -- The image itself
         "background-image",
