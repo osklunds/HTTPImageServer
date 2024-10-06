@@ -87,6 +87,8 @@ prop_folderPage_level1 = runTest $ do
        \\n\
        \</div>",
 
+       -- TODO: Thumbnails
+
        -- Folder button 2_1
        "folder_button",
        "window.location",
@@ -403,6 +405,21 @@ prop_thumbImage_level1 = runTest $ do
         "^content_of_level11_img_thumb$"
         ]
 
+prop_thumbImage_level2 = runTest $ do
+    assertResponseContainsStrings "/level1_1/level2_2/level2_img.jpg.thumb" [
+        "^random_stuff_that_for_sure_is_unique$"
+        ]
+
+prop_thumbImage_level3 = runTest $ do
+    assertResponseContainsStrings "/level1_1/level2_2/level3/just_a_name.jpg.thumb" [
+        "^content_of_level3_thumb_img$"
+        ]
+
+prop_thumbImage_level4 = runTest $ do
+    assertResponseContainsStrings "/level1_1/level2_2/level3/level4/just_a_name.jpg.thumb" [
+        "^content_of_level4_thumb_img$"
+        ]
+
 --------------------------------------------------------------------------------
 -- Helpers
 --------------------------------------------------------------------------------
@@ -451,10 +468,48 @@ createFoldersAndFiles thumbDir fullImageDir = do
               "content_of_root_level_img2_full"
 
     -- Images in level 1
-    writeFile (thumbDir </> "level1_1" </> "level11_img.jpg")
+    writeFile (thumbDir </> "level1_1"
+                        </> "level11_img.jpg")
               "content_of_level11_img_thumb"
-    writeFile (fullImageDir </> "level1_1" </> "level11_img.jpg")
+    writeFile (fullImageDir </> "level1_1"
+                            </> "level11_img.jpg")
               "content_of_level11_img_full"
+
+    -- Images in level 2
+    writeFile (thumbDir </> "level1_1"
+                        </> "level2_2"
+                        </> "level2_img.jpg")
+              "random_stuff_that_for_sure_is_unique"
+    writeFile (fullImageDir </> "level1_1"
+                            </> "level2_2"
+                            </> "level2_img.jpg")
+              "full size version of the thumbnail content"
+
+    -- Images in level 3
+    writeFile (thumbDir </> "level1_1"
+                        </> "level2_2"
+                        </> "level3"
+                        </> "just_a_name.jpg")
+              "content_of_level3_thumb_img"
+    writeFile (fullImageDir </> "level1_1"
+                            </> "level2_2"
+                            </> "level3"
+                            </> "just_a_name.jpg")
+              "content_of_level3_full_img"
+
+    -- Images in level 4
+    writeFile (thumbDir </> "level1_1"
+                        </> "level2_2"
+                        </> "level3"
+                        </> "level4"
+                        </> "just_a_name.jpg")
+              "content_of_level4_thumb_img"
+    writeFile (fullImageDir </> "level1_1"
+                            </> "level2_2"
+                            </> "level3"
+                            </> "level4"
+                            </> "just_a_name.jpg")
+              "content_of_level4_full_img"
 
     writeFile (thumbDir </> "level1_2" </> "level12_img1.jpg") ""
     writeFile (thumbDir </> "level1_2" </> "level12_img2.jpg") ""
