@@ -390,6 +390,14 @@ prop_imagePage_lastOfMany = runTest $ do
 
     -- TODO: Paths that don't exist
 
+prop_thumbImage_level1 = runTest $ do
+    assertResponseContainsStrings "/level1_img1.jpg.thumb" [
+        "^content_of_level1_img1_thumb$"
+        ]
+    assertResponseContainsStrings "/level1_img2.jpg.thumb" [
+        "^content_of_level1_img2_thumb$"
+        ]
+
 --------------------------------------------------------------------------------
 -- Helpers
 --------------------------------------------------------------------------------
