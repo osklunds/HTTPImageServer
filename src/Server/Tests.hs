@@ -87,8 +87,6 @@ prop_folderPage_level1 = runTest $ do
        \\n\
        \</div>",
 
-       -- TODO: Thumbnails
-
        -- Folder button 2_1
        "folder_button",
        "window.location",
@@ -99,7 +97,16 @@ prop_folderPage_level1 = runTest $ do
        "folder_button",
        "window.location",
        "/level1_1/level2_2",
-       "/level1_1/level2_2"
+       "/level1_1/level2_2",
+
+        -- Image
+        "preload",
+        "/level1_1/level11_img.jpg.thumb",
+        "image_container",
+        "window.location",
+        "/level1_1/level11_img.jpg.html",
+        "img class",
+        "/level1_1/level11_img.jpg.thumb"
        ]
 
 prop_folderPage_level2 = runTest $ do
@@ -118,11 +125,20 @@ prop_folderPage_level2 = runTest $ do
        \\n\
        \</div>",
 
-       -- Folder button 3
+       -- Folder button
        "folder_button",
        "window.location",
        "/level1_1/level2_2/level3",
-       "/level1_1/level2_2/level3"
+       "/level1_1/level2_2/level3",
+
+        -- Image
+        "preload",
+        "/level1_1/level2_2/level2_img.jpg.thumb",
+        "image_container",
+        "window.location",
+        "/level1_1/level2_2/level2_img.jpg.html",
+        "img class",
+        "/level1_1/level2_2/level2_img.jpg.thumb"
        ]
 
 prop_folderPage_level3 = runTest $ do
@@ -133,11 +149,20 @@ prop_folderPage_level3 = runTest $ do
        \\n\
        \</div>",
 
-       -- Folder button 4
+       -- Folder button
        "folder_button",
        "window.location",
        "/level1_1/level2_2/level3/level4",
-       "/level1_1/level2_2/level3/level4"
+       "/level1_1/level2_2/level3/level4",
+
+        -- Image
+        "preload",
+        "/level1_1/level2_2/level3/just_a_name.jpg.thumb",
+        "image_container",
+        "window.location",
+        "/level1_1/level2_2/level3/just_a_name.jpg.html",
+        "img class",
+        "/level1_1/level2_2/level3/just_a_name.jpg.thumb"
        ]
 
 prop_folderPage_level4 = runTest $ do
@@ -146,7 +171,16 @@ prop_folderPage_level4 = runTest $ do
        "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1/level2_2/level3';\">\n\
        \/level1_1/level2_2/level3/level4\n\
        \\n\
-       \</div>"
+       \</div>",
+
+        -- Image
+        "preload",
+        "/level1_1/level2_2/level3/level4/just_a_name.jpg.thumb",
+        "image_container",
+        "window.location",
+        "/level1_1/level2_2/level3/level4/just_a_name.jpg.html",
+        "img class",
+        "/level1_1/level2_2/level3/level4/just_a_name.jpg.thumb"
        ]
 
 prop_folderPage_onlyInThumbs = runTest $ do
@@ -552,6 +586,9 @@ createFoldersAndFiles thumbDir fullImageDir = do
     writeFile (thumbDir </> "level1_2" </> "level12_imgB.jpg") ""
     writeFile (thumbDir </> "level1_2" </> "level12_imgC.jpg") ""
     writeFile (thumbDir </> "level1_2" </> "level12_imgD.jpg") ""
+
+-- TODO: Non images
+
 
 
 assertResponseContainsStrings :: String -> [ByteString] -> IO ()
