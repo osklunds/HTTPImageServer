@@ -463,6 +463,9 @@ prop_thumbImage_level4 = runTest $ do
         "^content_of_level4_thumb_img$"
         ]
 
+prop_thumbImage_doesNotExist = runTest $ do
+    assertError "/doesNotExist.jpg.thumb"
+
 prop_fullImage_rootLevel = runTest $ do
     assertResponseContainsStrings "/root_level_img1.jpg.full" [
         "^content_of_root_level_img1_full$"
@@ -490,6 +493,15 @@ prop_fullImage_level4 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_2/level3/level4/just_a_name.jpg.full" [
         "^content_of_level4_full_img$"
         ]
+
+prop_fullImage_doesNotExist = runTest $ do
+    assertError "/doesNotExist.jpg.full"
+
+prop_incorrectExtension = runTest $ do
+    assertError "/something.incorrectExtension"
+
+prop_noExtension = runTest $ do
+    assertError "/something.noExtension"
 
 --------------------------------------------------------------------------------
 -- Helpers
