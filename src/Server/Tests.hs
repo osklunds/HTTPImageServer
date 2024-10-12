@@ -195,6 +195,9 @@ prop_folderPage_onlyInThumbs = runTest $ do
 prop_folderPage_onlyInFull = runTest $ do
     assertError "/onlyInFull"
 
+prop_folderPage_pathDoesNotExist = runTest $ do
+    assertError "/doesNotExist"
+
 prop_imagePage_1Of2 = runTest $ do
     assertResponseContainsStrings "/root_level_img1.jpg.html" [
         -- The image itself
