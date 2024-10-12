@@ -170,37 +170,42 @@ genImagePageInfo (State { thumbnailRootPath, cache }) url = do
     images <- filterM (isImage . addThumbPath) entriesWithPath
     let sortedImages = sort images
     let currentImage = folderPath </> takeFileName url
-    let (Just index) = findIndex (==currentImage) sortedImages
     
-    let fullImageUrlFromIndex = urlFromIndex sortedImages ".full"
+    let maybeIndex = findIndex (==currentImage) sortedImages
 
-    let fullImageUrl = fullImageUrlFromIndex index
+    case maybeIndex of
+        Nothing ->
+            error "Image not found"
+        (Just index) -> do
+            let fullImageUrlFromIndex = urlFromIndex sortedImages ".full"
 
-    -- left/rightImagePageUrl
-    let pageUrlFromIndex = urlFromIndex sortedImages ".html"
+            let fullImageUrl = fullImageUrlFromIndex index
 
-    let leftImagePageUrl = case index == 0 of
-                                True -> Nothing
-                                False -> Just $ pageUrlFromIndex $ index - 1
+            -- left/rightImagePageUrl
+            let pageUrlFromIndex = urlFromIndex sortedImages ".html"
 
-    let maxIndex = length sortedImages - 1
+            let leftImagePageUrl = case index == 0 of
+                                        True -> Nothing
+                                        False -> Just $ pageUrlFromIndex $ index - 1
 
-    let rightImagePageUrl = case index == maxIndex of
-                                True -> Nothing
-                                False -> Just $ pageUrlFromIndex $ index + 1
+            let maxIndex = length sortedImages - 1
 
-    -- preloadFullImageUrls and preloadImagePageUrls
-    let spread = 5
-    let indexes = [cap 0 maxIndex i | i <- [index-spread..index+spread]]
-    let preloadFullImageUrls = map fullImageUrlFromIndex indexes
-    let preloadImagePageUrls = map pageUrlFromIndex indexes
+            let rightImagePageUrl = case index == maxIndex of
+                                        True -> Nothing
+                                        False -> Just $ pageUrlFromIndex $ index + 1
 
-    return $ ImagePageInfo { folderUrl
-                           , fullImageUrl
-                           , leftImagePageUrl
-                           , rightImagePageUrl
-                           , preloadFullImageUrls
-                           , preloadImagePageUrls }
+            -- preloadFullImageUrls and preloadImagePageUrls
+            let spread = 5
+            let indexes = [cap 0 maxIndex i | i <- [index-spread..index+spread]]
+            let preloadFullImageUrls = map fullImageUrlFromIndex indexes
+            let preloadImagePageUrls = map pageUrlFromIndex indexes
+
+            return $ ImagePageInfo { folderUrl
+                                   , fullImageUrl
+                                   , leftImagePageUrl
+                                   , rightImagePageUrl
+                                   , preloadFullImageUrls
+                                   , preloadImagePageUrls }
 
 urlFromIndex :: [FilePath] -> FilePath -> (Int -> T.Text)
 urlFromIndex sortedImages extension i = T.pack $ "/" ++ imageName ++ extension

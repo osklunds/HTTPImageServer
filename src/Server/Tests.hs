@@ -430,7 +430,10 @@ prop_imagePage_lastOfMany = runTest $ do
         "/level1_2/level12_imgD.jpg.html"
         ]
 
-    -- TODO: Paths that don't exist
+-- todo: path that is neither of the 4 classes
+
+prop_imagePage_pathDoesNotExist = runTest $ do
+    assertError "/doesNotExist.jpg.html"
 
 prop_thumbImage_rootLevel = runTest $ do
     assertResponseContainsStrings "/root_level_img1.jpg.thumb" [
