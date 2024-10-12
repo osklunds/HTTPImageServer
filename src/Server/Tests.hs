@@ -192,6 +192,9 @@ prop_folderPage_onlyInThumbs = runTest $ do
        \</div>"
        ]
 
+prop_folderPage_onlyInFull = runTest $ do
+    assertError "/onlyInFull"
+
 prop_imagePage_1Of2 = runTest $ do
     assertResponseContainsStrings "/root_level_img1.jpg.html" [
         -- The image itself
@@ -622,6 +625,20 @@ assertContainsStrings haystack needles = do
     if match regex haystack
        then return ()
        else throwIO (AssertionFailed ("Regex not found"))
+
+assertError :: String -> IO ()
+assertError path = do
+    assertResponseContainsStrings path [
+        "^Something went wrong$"
+       ]
+
+    -- To see that the server still works afterwards
+    assertResponseContainsStrings "" [
+        "<div class=\"top_button\" height=\"30px\" >\n\
+        \/\n\
+        \\n\
+        \</div>"
+       ]
 
 
 return []
