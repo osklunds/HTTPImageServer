@@ -4,6 +4,9 @@
 
 module Server.Tests where
 
+-- TODO: clean up the ByteStrings. Text seems to be the way to go
+-- for, well, text, and ByteString for binary data. Text still needs to
+-- be converted to ByetString in the end, e.g. with encodeUtf8
 import Test.QuickCheck
 import Test.QuickCheck.Monadic hiding (assert)
 import Control.Concurrent
