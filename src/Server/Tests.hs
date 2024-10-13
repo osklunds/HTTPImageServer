@@ -92,7 +92,7 @@ prop_folderPage_root = runTest $ do
 prop_folderPage_level1 = runTest $ do
     assertResponseContainsStrings "/level1_1" [
        -- Top button
-       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/.';\">\n\
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/.';\">\n\
        \/level1_1\n\
        \\n\
        \</div>",
@@ -122,7 +122,7 @@ prop_folderPage_level1 = runTest $ do
 prop_folderPage_specialChars = runTest $ do
     assertResponseContainsStrings "/level1_4  special chars ;,-  åäöあ" [
        -- Top button
-       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/.';\">\n\
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/.';\">\n\
        \/level1_4  special chars ;,-  åäöあ\n\
        \\n\
        \</div>",
@@ -140,7 +140,7 @@ prop_folderPage_specialChars = runTest $ do
 prop_folderPage_level2 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_1" [
        -- Top button
-       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1';\">\n\
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/level1_1';\">\n\
        \/level1_1/level2_1\n\
        \\n\
        \</div>"
@@ -148,7 +148,7 @@ prop_folderPage_level2 = runTest $ do
 
     assertResponseContainsStrings "/level1_1/level2_2" [
        -- Top button
-       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1';\">\n\
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/level1_1';\">\n\
        \/level1_1/level2_2\n\
        \\n\
        \</div>",
@@ -172,7 +172,7 @@ prop_folderPage_level2 = runTest $ do
 prop_folderPage_level3 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_2/level3" [
        -- Top button
-       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1/level2_2';\">\n\
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/level1_1/level2_2';\">\n\
        \/level1_1/level2_2/level3\n\
        \\n\
        \</div>",
@@ -196,7 +196,7 @@ prop_folderPage_level3 = runTest $ do
 prop_folderPage_level4 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_2/level3/level4" [
        -- Top button
-       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1/level2_2/level3';\">\n\
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/level1_1/level2_2/level3';\">\n\
        \/level1_1/level2_2/level3/level4\n\
        \\n\
        \</div>",
@@ -214,7 +214,7 @@ prop_folderPage_level4 = runTest $ do
 prop_folderPage_onlyInThumbs = runTest $ do
     assertResponseContainsStrings "/onlyInThumbs" [
        -- Top button
-       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/.';\">\n\
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/.';\">\n\
        \/onlyInThumbs\n\
        \\n\
        \</div>"
@@ -229,7 +229,7 @@ prop_folderPage_pathDoesNotExist = runTest $ do
 prop_imagePage_1Of2 = runTest $ do
     assertResponseContainsStrings "/root_level_img1.jpg.html" [
         -- The image itself
-        "background-image: url\\(\"/./root_level_img1.jpg.full\"\\);",
+        "background-image: url(\"/./root_level_img1.jpg.full\");",
 
         -- Navigation buttons
         "<div class=\"left_button\" ></div>",
@@ -476,30 +476,30 @@ prop_imagePage_pathDoesNotExist = runTest $ do
 
 prop_thumbImage_rootLevel = runTest $ do
     assertResponseContainsStrings "/root_level_img1.jpg.thumb" [
-        "^content_of_root_level_img1_thumb$"
+        "content_of_root_level_img1_thumb"
         ]
     assertResponseContainsStrings "/root_level_img2.jpg.thumb" [
-        "^content_of_root_level_img2_thumb$"
+        "content_of_root_level_img2_thumb"
         ]
 
 prop_thumbImage_level1 = runTest $ do
     assertResponseContainsStrings "/level1_1/level11_img.jpg.thumb" [
-        "^content_of_level11_img_thumb$"
+        "content_of_level11_img_thumb"
         ]
 
 prop_thumbImage_level2 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_2/level2_img.jpg.thumb" [
-        "^random_stuff_that_for_sure_is_unique$"
+        "random_stuff_that_for_sure_is_unique"
         ]
 
 prop_thumbImage_level3 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_2/level3/just_a_name.jpg.thumb" [
-        "^content_of_level3_thumb_img$"
+        "content_of_level3_thumb_img"
         ]
 
 prop_thumbImage_level4 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_2/level3/level4/just_a_name.jpg.thumb" [
-        "^content_of_level4_thumb_img$"
+        "content_of_level4_thumb_img"
         ]
 
 prop_thumbImage_doesNotExist = runTest $ do
@@ -507,35 +507,35 @@ prop_thumbImage_doesNotExist = runTest $ do
 
 prop_thumbImage_specialChars = runTest $ do
     assertResponseContainsStrings "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.thumb" [
-        "^thumb_åäöあabc_thumb$"
+        "thumb_åäöあabc_thumb"
         ]
 
 prop_fullImage_rootLevel = runTest $ do
     assertResponseContainsStrings "/root_level_img1.jpg.full" [
-        "^content_of_root_level_img1_full$"
+        "content_of_root_level_img1_full"
         ]
     assertResponseContainsStrings "/root_level_img2.jpg.full" [
-        "^content_of_root_level_img2_full$"
+        "content_of_root_level_img2_full"
         ]
 
 prop_fullImage_level1 = runTest $ do
     assertResponseContainsStrings "/level1_1/level11_img.jpg.full" [
-        "^content_of_level11_img_full$"
+        "content_of_level11_img_full"
         ]
 
 prop_fullImage_level2 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_2/level2_img.jpg.full" [
-        "^full size version of the thumbnail content$"
+        "full size version of the thumbnail content"
         ]
 
 prop_fullImage_level3 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_2/level3/just_a_name.jpg.full" [
-        "^content_of_level3_full_img$"
+        "content_of_level3_full_img"
         ]
 
 prop_fullImage_level4 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_2/level3/level4/just_a_name.jpg.full" [
-        "^content_of_level4_full_img$"
+        "content_of_level4_full_img"
         ]
 
 prop_fullImage_doesNotExist = runTest $ do
@@ -543,7 +543,7 @@ prop_fullImage_doesNotExist = runTest $ do
 
 prop_fullImage_specialChars = runTest $ do
     assertResponseContainsStrings "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.full" [
-        "^full_åäöあabc_full$"
+        "full_åäöあabc_full"
         ]
 
 prop_incorrectExtension = runTest $ do
@@ -565,15 +565,15 @@ prop_nonImage = runTest $ do
 
     -- Thumbnail
     responseThumbExtension <- request "/other_file.txt.thumb"
-    assertContainsStrings responseThumbExtension ["^other_file_content$"]
+    assertContainsStrings responseThumbExtension ["other_file_content"]
     responseThumbNoExtension <- request "/other_file_no_extension.thumb"
-    assertContainsStrings responseThumbNoExtension ["^other_file_no_extension_content$"]
+    assertContainsStrings responseThumbNoExtension ["other_file_no_extension_content"]
 
     -- Full image
     responseFullExtension <- request "/other_file.txt.full"
-    assertContainsStrings responseFullExtension ["^other_file_content$"]
+    assertContainsStrings responseFullExtension ["other_file_content"]
     responseFullNoExtension <- request "/other_file_no_extension.full"
-    assertContainsStrings responseFullNoExtension ["^other_file_no_extension_content$"]
+    assertContainsStrings responseFullNoExtension ["other_file_no_extension_content"]
 
 --------------------------------------------------------------------------------
 -- Helpers
@@ -716,14 +716,15 @@ request path = do
 
 assertContainsStrings :: Text -> [Text] -> IO ()
 assertContainsStrings haystack needles = do
-    -- TODO: regex-quote each needle
+    let escapedNeedles = Prelude.map escape needles
+    
     -- First check each individual string for easier debugging
-    forM_ needles (\needle -> if haystack =~ makeRegex needle
+    forM_ escapedNeedles (\needle -> if haystack =~ makeRegex needle
                       then return ()
                       else do
                           throwIO (AssertionFailed (unpack needle)))
 
-    if haystack =~ (makeRegexMultiline $ intercalate ".*" needles)
+    if haystack =~ (makeRegexMultiline $ intercalate ".*" escapedNeedles)
        then return ()
        else throwIO (AssertionFailed "All-at-once regex not found")
 
@@ -742,7 +743,7 @@ makeRegexOpts needle options = regex
 assertError :: String -> IO ()
 assertError path = do
     assertResponseContainsStrings path [
-        "^Something went wrong$"
+        "Something went wrong"
        ]
 
     -- To see that the server still works afterwards
