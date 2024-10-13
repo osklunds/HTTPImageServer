@@ -475,76 +475,64 @@ prop_imagePage_pathDoesNotExist = runTest $ do
     assertError "/doesNotExist.jpg.html"
 
 prop_thumbImage_rootLevel = runTest $ do
-    assertResponseContainsStrings "/root_level_img1.jpg.thumb" [
-        "content_of_root_level_img1_thumb"
-        ]
-    assertResponseContainsStrings "/root_level_img2.jpg.thumb" [
-        "content_of_root_level_img2_thumb"
-        ]
+    assertResponseIsText "/root_level_img1.jpg.thumb"
+                         "content_of_root_level_img1_thumb"
+
+    assertResponseIsText "/root_level_img2.jpg.thumb"
+                         "content_of_root_level_img2_thumb"
 
 prop_thumbImage_level1 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level11_img.jpg.thumb" [
-        "content_of_level11_img_thumb"
-        ]
+    assertResponseIsText "/level1_1/level11_img.jpg.thumb"
+                         "content_of_level11_img_thumb"
 
 prop_thumbImage_level2 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level2_2/level2_img.jpg.thumb" [
-        "random_stuff_that_for_sure_is_unique"
-        ]
+    assertResponseIsText "/level1_1/level2_2/level2_img.jpg.thumb"
+                         "random_stuff_that_for_sure_is_unique"
 
 prop_thumbImage_level3 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level2_2/level3/just_a_name.jpg.thumb" [
-        "content_of_level3_thumb_img"
-        ]
+    assertResponseIsText "/level1_1/level2_2/level3/just_a_name.jpg.thumb"
+                         "content_of_level3_thumb_img"
 
 prop_thumbImage_level4 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level2_2/level3/level4/just_a_name.jpg.thumb" [
-        "content_of_level4_thumb_img"
-        ]
+    assertResponseIsText "/level1_1/level2_2/level3/level4/just_a_name.jpg.thumb"
+                         "content_of_level4_thumb_img"
 
 prop_thumbImage_doesNotExist = runTest $ do
     assertError "/doesNotExist.jpg.thumb"
 
 prop_thumbImage_specialChars = runTest $ do
-    assertResponseContainsStrings "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.thumb" [
-        "thumb_åäöあabc_thumb"
-        ]
+    assertResponseIsText "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.thumb"
+                         "thumb_åäöあabc_thumb"
 
 prop_fullImage_rootLevel = runTest $ do
-    assertResponseContainsStrings "/root_level_img1.jpg.full" [
-        "content_of_root_level_img1_full"
-        ]
-    assertResponseContainsStrings "/root_level_img2.jpg.full" [
-        "content_of_root_level_img2_full"
-        ]
+    assertResponseIsText "/root_level_img1.jpg.full"
+                         "content_of_root_level_img1_full"
+
+    assertResponseIsText "/root_level_img2.jpg.full"
+                         "content_of_root_level_img2_full"
 
 prop_fullImage_level1 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level11_img.jpg.full" [
-        "content_of_level11_img_full"
-        ]
+    assertResponseIsText "/level1_1/level11_img.jpg.full"
+                         "content_of_level11_img_full"
 
 prop_fullImage_level2 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level2_2/level2_img.jpg.full" [
-        "full size version of the thumbnail content"
-        ]
+    assertResponseIsText "/level1_1/level2_2/level2_img.jpg.full"
+                         "full size version of the thumbnail content"
 
 prop_fullImage_level3 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level2_2/level3/just_a_name.jpg.full" [
-        "content_of_level3_full_img"
-        ]
+    assertResponseIsText "/level1_1/level2_2/level3/just_a_name.jpg.full"
+                         "content_of_level3_full_img"
 
 prop_fullImage_level4 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level2_2/level3/level4/just_a_name.jpg.full" [
-        "content_of_level4_full_img"
-        ]
+    assertResponseIsText "/level1_1/level2_2/level3/level4/just_a_name.jpg.full"
+                         "content_of_level4_full_img"
 
 prop_fullImage_doesNotExist = runTest $ do
     assertError "/doesNotExist.jpg.full"
 
 prop_fullImage_specialChars = runTest $ do
-    assertResponseContainsStrings "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.full" [
-        "full_åäöあabc_full"
-        ]
+    assertResponseIsText "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.full"
+                         "full_åäöあabc_full"
 
 prop_incorrectExtension = runTest $ do
     assertError "/something.incorrectExtension"
@@ -706,6 +694,13 @@ assertResponseContainsStrings path needles = do
     -- print response
     assertContainsStrings response needles
 
+assertResponseIsText :: String -> Text -> IO ()
+assertResponseIsText path text = do
+    response <- request path
+    if response == text
+       then return ()
+       else error $ "Exp: '" ++ show text ++ "' Act: '" ++ show response ++ "'"
+
 request :: String -> IO Text
 request path = do
     -- Sleep to make sure the sever has started. Just 100 microseconds
@@ -742,9 +737,7 @@ makeRegexOpts needle options = regex
 
 assertError :: String -> IO ()
 assertError path = do
-    assertResponseContainsStrings path [
-        "Something went wrong"
-       ]
+    assertResponseIsText path "Something went wrong"
 
     -- To see that the server still works afterwards
     assertResponseContainsStrings "" [
