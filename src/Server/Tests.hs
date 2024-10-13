@@ -568,8 +568,8 @@ prop_nonImage = runTest $ do
     
 runTest :: IO () -> Property
 runTest testFunc = once $ monadicIO $ run $ do
-    withSystemTempDirectory "normalCases" (\thumbDir -> do
-        withSystemTempDirectory "normalCases" (\fullImageDir -> do
+    withSystemTempDirectory "HTTPImageServer" (\thumbDir -> do
+        withSystemTempDirectory "HTTPImageServer" (\fullImageDir -> do
             createFoldersAndFiles thumbDir fullImageDir
             let serverFunc = mainWithArgs thumbDir fullImageDir 12345
             race_ testFunc serverFunc))
