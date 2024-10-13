@@ -56,6 +56,12 @@ prop_folderPage_root = runTest $ do
         "/level1_3",
         "/level1_3",
 
+        -- Folder button 4
+        "folder_button",
+        "window.location",
+        "/level1_4utf8såäöあ",
+        "/level1_4utf8såäöあ",
+
         -- Folder button onlyInThumbs
         "folder_button",
         "window.location",
@@ -111,6 +117,24 @@ prop_folderPage_level1 = runTest $ do
         "/level1_1/level11_img.jpg.html",
         "img class",
         "/level1_1/level11_img.jpg.thumb"
+       ]
+
+prop_folderPage_specialChars = runTest $ do
+    assertResponseContainsStrings "/level1_4utf8såäöあ" [
+       -- Top button
+       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/.';\">\n\
+       \/level1_4utf8såäöあ\n\
+       \\n\
+       \</div>",
+
+        -- Image
+        "preload",
+        "/level1_4utf8såäöあ/åäöあabc.jpg.thumb",
+        "image_container",
+        "window.location",
+        "/level1_4utf8såäöあ/åäöあabc.jpg.html",
+        "img class",
+        "/level1_4utf8såäöあ/åäöあabc.jpg.thumb"
        ]
 
 prop_folderPage_level2 = runTest $ do
@@ -249,6 +273,19 @@ prop_imagePage_1Of1 = runTest $ do
         "<div class=\"left_button\" ></div>",
         "top_button",
         "'/level1_1'",
+        "<div class=\"right_button\" ></div>"
+        ]
+
+prop_imagePage_specialChars = runTest $ do
+    assertResponseContainsStrings "/level1_4utf8såäöあ/åäöあabc.jpg.html" [
+        -- The image itself
+        "background-image",
+        "/level1_4utf8såäöあ/åäöあabc.jpg.full",
+
+        -- Navigation buttons
+        "<div class=\"left_button\" ></div>",
+        "top_button",
+        "'/level1_4utf8såäöあ'",
         "<div class=\"right_button\" ></div>"
         ]
 
@@ -468,6 +505,11 @@ prop_thumbImage_level4 = runTest $ do
 prop_thumbImage_doesNotExist = runTest $ do
     assertError "/doesNotExist.jpg.thumb"
 
+prop_thumbImage_specialChars = runTest $ do
+    assertResponseContainsStrings "/level1_4utf8såäöあ/åäöあabc.jpg.thumb" [
+        "^thumb_åäöあabc_thumb$"
+        ]
+
 prop_fullImage_rootLevel = runTest $ do
     assertResponseContainsStrings "/root_level_img1.jpg.full" [
         "^content_of_root_level_img1_full$"
@@ -498,6 +540,11 @@ prop_fullImage_level4 = runTest $ do
 
 prop_fullImage_doesNotExist = runTest $ do
     assertError "/doesNotExist.jpg.full"
+
+prop_fullImage_specialChars = runTest $ do
+    assertResponseContainsStrings "/level1_4utf8såäöあ/åäöあabc.jpg.full" [
+        "^full_åäöあabc_full$"
+        ]
 
 prop_incorrectExtension = runTest $ do
     assertError "/something.incorrectExtension"
@@ -559,7 +606,7 @@ createFoldersAndFiles thumbDir fullImageDir = do
                                              </> "level4"
                        createDirectory $ dir </> "level1_2"
                        createDirectory $ dir </> "level1_3"
-                       -- TODO: Special chars
+                       createDirectory $ dir </> "level1_4utf8såäöあ"
           )
 
     createDirectory $ thumbDir </> "onlyInThumbs"
@@ -584,13 +631,21 @@ createFoldersAndFiles thumbDir fullImageDir = do
     writeFile (fullImageDir </> "other_file_no_extension")
               "other_file_no_extension_content"
 
-    -- Images in level 1
+    -- Images in level 1_1
     writeFile (thumbDir </> "level1_1"
                         </> "level11_img.jpg")
               "content_of_level11_img_thumb"
     writeFile (fullImageDir </> "level1_1"
                             </> "level11_img.jpg")
               "content_of_level11_img_full"
+
+    -- Images in level 1_4
+    writeFile (thumbDir </> "level1_4utf8såäöあ"
+                        </> "åäöあabc.jpg")
+              "thumb_åäöあabc_thumb"
+    writeFile (fullImageDir </> "level1_4utf8såäöあ"
+                            </> "åäöあabc.jpg")
+              "full_åäöあabc_full"
 
     -- Images in level 2
     writeFile (thumbDir </> "level1_1"
@@ -645,7 +700,7 @@ createFoldersAndFiles thumbDir fullImageDir = do
 assertResponseContainsStrings :: String -> [Text] -> IO ()
 assertResponseContainsStrings path needles = do
     response <- request path
-    -- LBS.putStr response
+    -- print response
     assertContainsStrings response needles
 
 request :: String -> IO Text
