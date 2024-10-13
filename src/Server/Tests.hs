@@ -13,14 +13,14 @@ import Data.Either
 import System.IO.Temp
 import System.FilePath
 import System.Directory
-import System.Timeout
 import Control.Concurrent.Async
 
 import Network.HTTP.Simple
 
 import Text.Regex.PCRE.Heavy
 import Text.Regex.PCRE.Light (multiline, dotall)
-import Data.Text
+import Data.Text (Text)
+import qualified Data.Text as Text
 import Data.Text.Encoding
 
 import Server
@@ -716,9 +716,9 @@ assertContainsStrings haystack needles = do
     forM_ escapedNeedles (\needle -> if haystack =~ makeRegex needle
                       then return ()
                       else do
-                          error $ unpack needle)
+                          error $ Text.unpack needle)
 
-    if haystack =~ (makeRegexMultiline $ intercalate ".*" escapedNeedles)
+    if haystack =~ (makeRegexMultiline $ Text.intercalate ".*" escapedNeedles)
        then return ()
        else error $ "All-at-once regex not found"
 
