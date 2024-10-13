@@ -4,26 +4,24 @@
 
 module Server.Tests where
 
--- TODO: clean up the ByteStrings. Text seems to be the way to go
--- for, well, text, and ByteString for binary data. Text still needs to
--- be converted to ByetString in the end, e.g. with encodeUtf8
 import Test.QuickCheck
 import Test.QuickCheck.Monadic hiding (assert)
 import Control.Concurrent
 import Control.Monad
-import Network.HTTP.Client
-import Text.Regex.TDFA
-import Text.Regex.TDFA.ByteString
-import Control.Exception as CE hiding (assert)
-import Data.List
-import Data.ByteString.Lazy as LBS (putStr)
-import Data.ByteString.Lazy.Char8 (ByteString)
-import qualified Data.ByteString.Lazy.Char8 as LBS8 
+import Data.Either
+
 import System.IO.Temp
 import System.FilePath
 import System.Directory
-import System.Timeout
 import Control.Concurrent.Async
+
+import Network.HTTP.Simple
+
+import Text.Regex.PCRE.Heavy
+import Text.Regex.PCRE.Light (multiline, dotall)
+import Data.Text (Text)
+import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Text
 
 import Server
 
@@ -57,6 +55,12 @@ prop_folderPage_root = runTest $ do
         "/level1_3",
         "/level1_3",
 
+        -- Folder button 4
+        "folder_button",
+        "window.location",
+        "/level1_4  special chars ;,-  åäöあ",
+        "/level1_4  special chars ;,-  åäöあ",
+
         -- Folder button onlyInThumbs
         "folder_button",
         "window.location",
@@ -87,7 +91,7 @@ prop_folderPage_root = runTest $ do
 prop_folderPage_level1 = runTest $ do
     assertResponseContainsStrings "/level1_1" [
        -- Top button
-       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/.';\">\n\
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/.';\">\n\
        \/level1_1\n\
        \\n\
        \</div>",
@@ -114,10 +118,28 @@ prop_folderPage_level1 = runTest $ do
         "/level1_1/level11_img.jpg.thumb"
        ]
 
+prop_folderPage_specialChars = runTest $ do
+    assertResponseContainsStrings "/level1_4  special chars ;,-  åäöあ" [
+       -- Top button
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/.';\">\n\
+       \/level1_4  special chars ;,-  åäöあ\n\
+       \\n\
+       \</div>",
+
+        -- Image
+        "preload",
+        "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.thumb",
+        "image_container",
+        "window.location",
+        "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.html",
+        "img class",
+        "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.thumb"
+       ]
+
 prop_folderPage_level2 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_1" [
        -- Top button
-       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1';\">\n\
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/level1_1';\">\n\
        \/level1_1/level2_1\n\
        \\n\
        \</div>"
@@ -125,7 +147,7 @@ prop_folderPage_level2 = runTest $ do
 
     assertResponseContainsStrings "/level1_1/level2_2" [
        -- Top button
-       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1';\">\n\
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/level1_1';\">\n\
        \/level1_1/level2_2\n\
        \\n\
        \</div>",
@@ -149,7 +171,7 @@ prop_folderPage_level2 = runTest $ do
 prop_folderPage_level3 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_2/level3" [
        -- Top button
-       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1/level2_2';\">\n\
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/level1_1/level2_2';\">\n\
        \/level1_1/level2_2/level3\n\
        \\n\
        \</div>",
@@ -173,7 +195,7 @@ prop_folderPage_level3 = runTest $ do
 prop_folderPage_level4 = runTest $ do
     assertResponseContainsStrings "/level1_1/level2_2/level3/level4" [
        -- Top button
-       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/level1_1/level2_2/level3';\">\n\
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/level1_1/level2_2/level3';\">\n\
        \/level1_1/level2_2/level3/level4\n\
        \\n\
        \</div>",
@@ -191,7 +213,7 @@ prop_folderPage_level4 = runTest $ do
 prop_folderPage_onlyInThumbs = runTest $ do
     assertResponseContainsStrings "/onlyInThumbs" [
        -- Top button
-       "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/.';\">\n\
+       "<div class=\"top_button\" height=\"30px\" onclick=\"window.location='/.';\">\n\
        \/onlyInThumbs\n\
        \\n\
        \</div>"
@@ -206,7 +228,7 @@ prop_folderPage_pathDoesNotExist = runTest $ do
 prop_imagePage_1Of2 = runTest $ do
     assertResponseContainsStrings "/root_level_img1.jpg.html" [
         -- The image itself
-        "background-image: url\\(\"/./root_level_img1.jpg.full\"\\);",
+        "background-image: url(\"/./root_level_img1.jpg.full\");",
 
         -- Navigation buttons
         "<div class=\"left_button\" ></div>",
@@ -250,6 +272,19 @@ prop_imagePage_1Of1 = runTest $ do
         "<div class=\"left_button\" ></div>",
         "top_button",
         "'/level1_1'",
+        "<div class=\"right_button\" ></div>"
+        ]
+
+prop_imagePage_specialChars = runTest $ do
+    assertResponseContainsStrings "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.html" [
+        -- The image itself
+        "background-image",
+        "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.full",
+
+        -- Navigation buttons
+        "<div class=\"left_button\" ></div>",
+        "top_button",
+        "'/level1_4  special chars ;,-  åäöあ'",
         "<div class=\"right_button\" ></div>"
         ]
 
@@ -439,66 +474,64 @@ prop_imagePage_pathDoesNotExist = runTest $ do
     assertError "/doesNotExist.jpg.html"
 
 prop_thumbImage_rootLevel = runTest $ do
-    assertResponseContainsStrings "/root_level_img1.jpg.thumb" [
-        "^content_of_root_level_img1_thumb$"
-        ]
-    assertResponseContainsStrings "/root_level_img2.jpg.thumb" [
-        "^content_of_root_level_img2_thumb$"
-        ]
+    assertResponseIsText "/root_level_img1.jpg.thumb"
+                         "content_of_root_level_img1_thumb"
+
+    assertResponseIsText "/root_level_img2.jpg.thumb"
+                         "content_of_root_level_img2_thumb"
 
 prop_thumbImage_level1 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level11_img.jpg.thumb" [
-        "^content_of_level11_img_thumb$"
-        ]
+    assertResponseIsText "/level1_1/level11_img.jpg.thumb"
+                         "content_of_level11_img_thumb"
 
 prop_thumbImage_level2 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level2_2/level2_img.jpg.thumb" [
-        "^random_stuff_that_for_sure_is_unique$"
-        ]
+    assertResponseIsText "/level1_1/level2_2/level2_img.jpg.thumb"
+                         "random_stuff_that_for_sure_is_unique"
 
 prop_thumbImage_level3 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level2_2/level3/just_a_name.jpg.thumb" [
-        "^content_of_level3_thumb_img$"
-        ]
+    assertResponseIsText "/level1_1/level2_2/level3/just_a_name.jpg.thumb"
+                         "content_of_level3_thumb_img"
 
 prop_thumbImage_level4 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level2_2/level3/level4/just_a_name.jpg.thumb" [
-        "^content_of_level4_thumb_img$"
-        ]
+    assertResponseIsText "/level1_1/level2_2/level3/level4/just_a_name.jpg.thumb"
+                         "content_of_level4_thumb_img"
 
 prop_thumbImage_doesNotExist = runTest $ do
     assertError "/doesNotExist.jpg.thumb"
 
+prop_thumbImage_specialChars = runTest $ do
+    assertResponseIsText "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.thumb"
+                         "thumb_åäöあabc_thumb"
+
 prop_fullImage_rootLevel = runTest $ do
-    assertResponseContainsStrings "/root_level_img1.jpg.full" [
-        "^content_of_root_level_img1_full$"
-        ]
-    assertResponseContainsStrings "/root_level_img2.jpg.full" [
-        "^content_of_root_level_img2_full$"
-        ]
+    assertResponseIsText "/root_level_img1.jpg.full"
+                         "content_of_root_level_img1_full"
+
+    assertResponseIsText "/root_level_img2.jpg.full"
+                         "content_of_root_level_img2_full"
 
 prop_fullImage_level1 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level11_img.jpg.full" [
-        "^content_of_level11_img_full$"
-        ]
+    assertResponseIsText "/level1_1/level11_img.jpg.full"
+                         "content_of_level11_img_full"
 
 prop_fullImage_level2 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level2_2/level2_img.jpg.full" [
-        "^full size version of the thumbnail content$"
-        ]
+    assertResponseIsText "/level1_1/level2_2/level2_img.jpg.full"
+                         "full size version of the thumbnail content"
 
 prop_fullImage_level3 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level2_2/level3/just_a_name.jpg.full" [
-        "^content_of_level3_full_img$"
-        ]
+    assertResponseIsText "/level1_1/level2_2/level3/just_a_name.jpg.full"
+                         "content_of_level3_full_img"
 
 prop_fullImage_level4 = runTest $ do
-    assertResponseContainsStrings "/level1_1/level2_2/level3/level4/just_a_name.jpg.full" [
-        "^content_of_level4_full_img$"
-        ]
+    assertResponseIsText "/level1_1/level2_2/level3/level4/just_a_name.jpg.full"
+                         "content_of_level4_full_img"
 
 prop_fullImage_doesNotExist = runTest $ do
     assertError "/doesNotExist.jpg.full"
+
+prop_fullImage_specialChars = runTest $ do
+    assertResponseIsText "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.full"
+                         "full_åäöあabc_full"
 
 prop_incorrectExtension = runTest $ do
     assertError "/something.incorrectExtension"
@@ -509,25 +542,25 @@ prop_noExtension = runTest $ do
 prop_nonImage = runTest $ do
     -- Folder page
     responseFolderPage <- request ""
-    assert $ responseFolderPage =~ ("top_button" :: ByteString)
-    assert $ not $ responseFolderPage =~ ("other_file" :: ByteString)
+    assert $ responseFolderPage =~ makeRegex "top_button"
+    assert $ not $ responseFolderPage =~ makeRegex "other_file"
 
     -- ImagePage
     responseImagePage <- request "/root_level_img1.jpg.html"
-    assert $ responseImagePage =~ ("background-image" :: ByteString)
-    assert $ not $ responseImagePage =~ ("other_file" :: ByteString)
+    assert $ responseImagePage =~ makeRegex "background-image"
+    assert $ not $ responseImagePage =~ makeRegex "other_file"
 
     -- Thumbnail
     responseThumbExtension <- request "/other_file.txt.thumb"
-    assertContainsStrings responseThumbExtension ["^other_file_content$"]
+    assertContainsStrings responseThumbExtension ["other_file_content"]
     responseThumbNoExtension <- request "/other_file_no_extension.thumb"
-    assertContainsStrings responseThumbNoExtension ["^other_file_no_extension_content$"]
+    assertContainsStrings responseThumbNoExtension ["other_file_no_extension_content"]
 
     -- Full image
     responseFullExtension <- request "/other_file.txt.full"
-    assertContainsStrings responseFullExtension ["^other_file_content$"]
+    assertContainsStrings responseFullExtension ["other_file_content"]
     responseFullNoExtension <- request "/other_file_no_extension.full"
-    assertContainsStrings responseFullNoExtension ["^other_file_no_extension_content$"]
+    assertContainsStrings responseFullNoExtension ["other_file_no_extension_content"]
 
 --------------------------------------------------------------------------------
 -- Helpers
@@ -535,8 +568,8 @@ prop_nonImage = runTest $ do
     
 runTest :: IO () -> Property
 runTest testFunc = once $ monadicIO $ run $ do
-    withSystemTempDirectory "normalCases" (\thumbDir -> do
-        withSystemTempDirectory "normalCases" (\fullImageDir -> do
+    withSystemTempDirectory "HTTPImageServer" (\thumbDir -> do
+        withSystemTempDirectory "HTTPImageServer" (\fullImageDir -> do
             createFoldersAndFiles thumbDir fullImageDir
             let serverFunc = mainWithArgs thumbDir fullImageDir 12345
             race_ testFunc serverFunc))
@@ -560,7 +593,10 @@ createFoldersAndFiles thumbDir fullImageDir = do
                                              </> "level4"
                        createDirectory $ dir </> "level1_2"
                        createDirectory $ dir </> "level1_3"
-                       -- TODO: Special chars
+                       -- Can't have too special chars like / because I don't
+                       -- handle quoting correctly (probably). Let's for now
+                       -- just support "realistic" special chars
+                       createDirectory $ dir </> "level1_4  special chars ;,-  åäöあ"
           )
 
     createDirectory $ thumbDir </> "onlyInThumbs"
@@ -585,13 +621,21 @@ createFoldersAndFiles thumbDir fullImageDir = do
     writeFile (fullImageDir </> "other_file_no_extension")
               "other_file_no_extension_content"
 
-    -- Images in level 1
+    -- Images in level 1_1
     writeFile (thumbDir </> "level1_1"
                         </> "level11_img.jpg")
               "content_of_level11_img_thumb"
     writeFile (fullImageDir </> "level1_1"
                             </> "level11_img.jpg")
               "content_of_level11_img_full"
+
+    -- Images in level 1_4
+    writeFile (thumbDir </> "level1_4  special chars ;,-  åäöあ"
+                        </> "  å ä  ö あabc.jpg")
+              "thumb_åäöあabc_thumb"
+    writeFile (fullImageDir </> "level1_4  special chars ;,-  åäöあ"
+                            </> "  å ä  ö あabc.jpg")
+              "full_åäöあabc_full"
 
     -- Images in level 2
     writeFile (thumbDir </> "level1_1"
@@ -643,43 +687,56 @@ createFoldersAndFiles thumbDir fullImageDir = do
     writeFile (thumbDir </> "level1_2" </> "level12_imgC.jpg") ""
     writeFile (thumbDir </> "level1_2" </> "level12_imgD.jpg") ""
 
-assertResponseContainsStrings :: String -> [ByteString] -> IO ()
+assertResponseContainsStrings :: String -> [Text] -> IO ()
 assertResponseContainsStrings path needles = do
     response <- request path
-    -- LBS.putStr response
+    -- print response
     assertContainsStrings response needles
 
-request :: String -> IO ByteString
-request path = do
-    manager <- newManager defaultManagerSettings
-    request <- parseRequest $ "http://127.0.0.1:12345" ++ path
-    response <- httpLbs request manager
-    return $ responseBody response
+assertResponseIsText :: String -> Text -> IO ()
+assertResponseIsText path text = do
+    response <- request path
+    if response == text
+       then return ()
+       else error $ "Exp: '" ++ show text ++ "' Act: '" ++ show response ++ "'"
 
-assertContainsStrings :: ByteString -> [ByteString] -> IO ()
+request :: String -> IO Text
+request path = do
+    -- Sleep to make sure the sever has started. Just 100 microseconds
+    threadDelay 100
+    request <- parseRequest $ "http://127.0.0.1:12345" ++ path
+    response <- httpBS request
+    return $ Text.decodeUtf8 $ getResponseBody response
+
+assertContainsStrings :: Text -> [Text] -> IO ()
 assertContainsStrings haystack needles = do
-    -- TODO: regex-quote each needle
+    let escapedNeedles = Prelude.map escape needles
+    
     -- First check each individual string for easier debugging
-    forM_ needles (\needle -> if haystack =~ needle
+    forM_ escapedNeedles (\needle -> if haystack =~ makeRegex needle
                       then return ()
                       else do
-                          throwIO (AssertionFailed (LBS8.unpack needle)))
+                          error $ Text.unpack needle)
 
-    -- Then check all at once to verify the order
-    let opts = defaultCompOpt{multiline = False}
-    let regex = makeRegexOpts opts
-                              defaultExecOpt
-                              (LBS8.intercalate ".*" needles)
-
-    if match regex haystack
+    if haystack =~ (makeRegexMultiline $ Text.intercalate ".*" escapedNeedles)
        then return ()
-       else throwIO (AssertionFailed ("Regex not found"))
+       else error $ "All-at-once regex not found"
+
+makeRegex :: Text -> Regex
+makeRegex needle = makeRegexOpts needle []
+
+makeRegexMultiline :: Text -> Regex
+makeRegexMultiline needle = makeRegexOpts needle [multiline, dotall]
+
+makeRegexOpts :: Text -> [PCREOption] -> Regex
+makeRegexOpts needle options = regex
+    where
+        regex = fromRight (error "Failed to compile regex")
+                          (compileM (Text.encodeUtf8 needle) options)
 
 assertError :: String -> IO ()
 assertError path = do
-    assertResponseContainsStrings path [
-        "^Something went wrong$"
-       ]
+    assertResponseIsText path "Something went wrong"
 
     -- To see that the server still works afterwards
     assertResponseContainsStrings "" [
@@ -691,7 +748,7 @@ assertError path = do
 
 assert :: Bool -> IO ()
 assert True = return ()
-assert False = throwIO (AssertionFailed "assert function")
+assert False = error "assert function"
 
 
 return []
