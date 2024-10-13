@@ -59,8 +59,8 @@ prop_folderPage_root = runTest $ do
         -- Folder button 4
         "folder_button",
         "window.location",
-        "/level1_4utf8såäöあ",
-        "/level1_4utf8såäöあ",
+        "/level1_4  special chars ;,-  åäöあ",
+        "/level1_4  special chars ;,-  åäöあ",
 
         -- Folder button onlyInThumbs
         "folder_button",
@@ -120,21 +120,21 @@ prop_folderPage_level1 = runTest $ do
        ]
 
 prop_folderPage_specialChars = runTest $ do
-    assertResponseContainsStrings "/level1_4utf8såäöあ" [
+    assertResponseContainsStrings "/level1_4  special chars ;,-  åäöあ" [
        -- Top button
        "<div class=\"top_button\" height=\"30px\" onclick=\\\"window.location='/.';\">\n\
-       \/level1_4utf8såäöあ\n\
+       \/level1_4  special chars ;,-  åäöあ\n\
        \\n\
        \</div>",
 
         -- Image
         "preload",
-        "/level1_4utf8såäöあ/åäöあabc.jpg.thumb",
+        "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.thumb",
         "image_container",
         "window.location",
-        "/level1_4utf8såäöあ/åäöあabc.jpg.html",
+        "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.html",
         "img class",
-        "/level1_4utf8såäöあ/åäöあabc.jpg.thumb"
+        "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.thumb"
        ]
 
 prop_folderPage_level2 = runTest $ do
@@ -277,15 +277,15 @@ prop_imagePage_1Of1 = runTest $ do
         ]
 
 prop_imagePage_specialChars = runTest $ do
-    assertResponseContainsStrings "/level1_4utf8såäöあ/åäöあabc.jpg.html" [
+    assertResponseContainsStrings "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.html" [
         -- The image itself
         "background-image",
-        "/level1_4utf8såäöあ/åäöあabc.jpg.full",
+        "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.full",
 
         -- Navigation buttons
         "<div class=\"left_button\" ></div>",
         "top_button",
-        "'/level1_4utf8såäöあ'",
+        "'/level1_4  special chars ;,-  åäöあ'",
         "<div class=\"right_button\" ></div>"
         ]
 
@@ -506,7 +506,7 @@ prop_thumbImage_doesNotExist = runTest $ do
     assertError "/doesNotExist.jpg.thumb"
 
 prop_thumbImage_specialChars = runTest $ do
-    assertResponseContainsStrings "/level1_4utf8såäöあ/åäöあabc.jpg.thumb" [
+    assertResponseContainsStrings "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.thumb" [
         "^thumb_åäöあabc_thumb$"
         ]
 
@@ -542,7 +542,7 @@ prop_fullImage_doesNotExist = runTest $ do
     assertError "/doesNotExist.jpg.full"
 
 prop_fullImage_specialChars = runTest $ do
-    assertResponseContainsStrings "/level1_4utf8såäöあ/åäöあabc.jpg.full" [
+    assertResponseContainsStrings "/level1_4  special chars ;,-  åäöあ/  å ä  ö あabc.jpg.full" [
         "^full_åäöあabc_full$"
         ]
 
@@ -606,7 +606,10 @@ createFoldersAndFiles thumbDir fullImageDir = do
                                              </> "level4"
                        createDirectory $ dir </> "level1_2"
                        createDirectory $ dir </> "level1_3"
-                       createDirectory $ dir </> "level1_4utf8såäöあ"
+                       -- Can't have too special chars like / because I don't
+                       -- handle quoting correctly (probably). Let's for now
+                       -- just support "realistic" special chars
+                       createDirectory $ dir </> "level1_4  special chars ;,-  åäöあ"
           )
 
     createDirectory $ thumbDir </> "onlyInThumbs"
@@ -640,11 +643,11 @@ createFoldersAndFiles thumbDir fullImageDir = do
               "content_of_level11_img_full"
 
     -- Images in level 1_4
-    writeFile (thumbDir </> "level1_4utf8såäöあ"
-                        </> "åäöあabc.jpg")
+    writeFile (thumbDir </> "level1_4  special chars ;,-  åäöあ"
+                        </> "  å ä  ö あabc.jpg")
               "thumb_åäöあabc_thumb"
-    writeFile (fullImageDir </> "level1_4utf8såäöあ"
-                            </> "åäöあabc.jpg")
+    writeFile (fullImageDir </> "level1_4  special chars ;,-  åäöあ"
+                            </> "  å ä  ö あabc.jpg")
               "full_åäöあabc_full"
 
     -- Images in level 2
