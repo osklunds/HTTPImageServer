@@ -22,6 +22,7 @@ executable HTTPImageServer
   ghc-options:
     "-Wno-missing-home-modules"
     -O2
+    -freverse-errors
   other-modules:
     HTMLGen,
     RequestHandler
@@ -39,7 +40,12 @@ executable HTTPImageServer
     template-haskell >= 2.15.0.0,
     file-embed >= 0.0.15.0,
     containers,
-    time
+    time,
+    QuickCheck,
+    http-client,
+    regex-tdfa,
+    temporary,
+    async
   hs-source-dirs:
     src
   default-language:    Haskell2010
