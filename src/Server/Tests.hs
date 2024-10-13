@@ -508,13 +508,13 @@ prop_noExtension = runTest $ do
 prop_nonImage = runTest $ do
     -- Folder page
     responseFolderPage <- request ""
-    -- assert $ responseFolderPage =~ "top_button"
-    -- assert $ not $ responseFolderPage =~ "other_file"
+    assert $ responseFolderPage =~ makeRegex "top_button"
+    assert $ not $ responseFolderPage =~ makeRegex "other_file"
 
     -- ImagePage
     responseImagePage <- request "/root_level_img1.jpg.html"
-    -- assert $ responseImagePage =~ "background-image"
-    -- assert $ not $ responseImagePage =~ "other_file"
+    assert $ responseImagePage =~ makeRegex "background-image"
+    assert $ not $ responseImagePage =~ makeRegex "other_file"
 
     -- Thumbnail
     responseThumbExtension <- request "/other_file.txt.thumb"
@@ -660,17 +660,23 @@ assertContainsStrings :: Text -> [Text] -> IO ()
 assertContainsStrings haystack needles = do
     -- TODO: regex-quote each needle
     -- First check each individual string for easier debugging
-    forM_ needles (\needle -> if haystack =~ (makeRegex needle [])
+    forM_ needles (\needle -> if haystack =~ makeRegex needle
                       then return ()
                       else do
                           throwIO (AssertionFailed (unpack needle)))
 
-    if haystack =~ (makeRegex (intercalate ".*" needles) [multiline, dotall])
+    if haystack =~ (makeRegexMultiline $ intercalate ".*" needles)
        then return ()
        else throwIO (AssertionFailed "All-at-once regex not found")
 
-makeRegex :: Text -> [PCREOption] -> Regex
-makeRegex needle options = regex
+makeRegex :: Text -> Regex
+makeRegex needle = makeRegexOpts needle []
+
+makeRegexMultiline :: Text -> Regex
+makeRegexMultiline needle = makeRegexOpts needle [multiline, dotall]
+
+makeRegexOpts :: Text -> [PCREOption] -> Regex
+makeRegexOpts needle options = regex
     where
         regex = fromRight (error "Failed to compile regex")
                           (compileM (encodeUtf8 needle) options)
