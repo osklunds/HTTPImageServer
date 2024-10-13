@@ -5,13 +5,13 @@
 module Server.Tests where
 
 import Test.QuickCheck
-import Test.QuickCheck.Monadic
+import Test.QuickCheck.Monadic hiding (assert)
 import Control.Concurrent
 import Control.Monad
 import Network.HTTP.Client
 import Text.Regex.TDFA
 import Text.Regex.TDFA.ByteString
-import Control.Exception as CE
+import Control.Exception as CE hiding (assert)
 import Data.List
 import Data.ByteString.Lazy as LBS (putStr)
 import Data.ByteString.Lazy.Char8 (ByteString)
@@ -78,6 +78,13 @@ prop_folderPage_root = runTest $ do
         "img class",
         "/root_level_img2.jpg.thumb"
         ]
+
+    response <- request ""
+    -- Checking that no non-images are included
+    assert $ response =~ ("top_button" :: ByteString)
+    assert $ not $ response =~ ("other_file" :: ByteString)
+    
+    return ()
 
 prop_folderPage_level1 = runTest $ do
     assertResponseContainsStrings "/level1_1" [
@@ -548,6 +555,11 @@ createFoldersAndFiles thumbDir fullImageDir = do
     writeFile (fullImageDir </> "root_level_img2.jpg")
               "content_of_root_level_img2_full"
 
+    writeFile (thumbDir </> "other_file.txt")
+              "other_file_content"
+    writeFile (thumbDir </> "other_file_no_extension")
+              "other_file_no_extension_content"
+
     -- Images in level 1
     writeFile (thumbDir </> "level1_1"
                         </> "level11_img.jpg")
@@ -655,6 +667,10 @@ assertError path = do
         \\n\
         \</div>"
        ]
+
+assert :: Bool -> IO ()
+assert True = return ()
+assert False = throwIO (AssertionFailed "assert function")
 
 
 return []
