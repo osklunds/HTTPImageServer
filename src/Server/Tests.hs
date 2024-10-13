@@ -430,8 +430,6 @@ prop_imagePage_lastOfMany = runTest $ do
         "/level1_2/level12_imgD.jpg.html"
         ]
 
--- todo: path that is neither of the 4 classes
-
 prop_imagePage_pathDoesNotExist = runTest $ do
     assertError "/doesNotExist.jpg.html"
 
