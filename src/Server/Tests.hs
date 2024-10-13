@@ -21,7 +21,7 @@ import Text.Regex.PCRE.Heavy
 import Text.Regex.PCRE.Light (multiline, dotall)
 import Data.Text (Text)
 import qualified Data.Text as Text
-import Data.Text.Encoding
+import qualified Data.Text.Encoding as Text
 
 import Server
 
@@ -706,7 +706,7 @@ request path = do
     threadDelay 100
     request <- parseRequest $ "http://127.0.0.1:12345" ++ path
     response <- httpBS request
-    return $ decodeUtf8 $ getResponseBody response
+    return $ Text.decodeUtf8 $ getResponseBody response
 
 assertContainsStrings :: Text -> [Text] -> IO ()
 assertContainsStrings haystack needles = do
@@ -732,7 +732,7 @@ makeRegexOpts :: Text -> [PCREOption] -> Regex
 makeRegexOpts needle options = regex
     where
         regex = fromRight (error "Failed to compile regex")
-                          (compileM (encodeUtf8 needle) options)
+                          (compileM (Text.encodeUtf8 needle) options)
 
 assertError :: String -> IO ()
 assertError path = do
