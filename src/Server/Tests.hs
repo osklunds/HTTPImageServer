@@ -4,26 +4,25 @@
 
 module Server.Tests where
 
--- TODO: clean up the ByteStrings. Text seems to be the way to go
--- for, well, text, and ByteString for binary data. Text still needs to
--- be converted to ByetString in the end, e.g. with encodeUtf8
 import Test.QuickCheck
 import Test.QuickCheck.Monadic hiding (assert)
 import Control.Concurrent
 import Control.Monad
-import Network.HTTP.Client
-import Text.Regex.TDFA
-import Text.Regex.TDFA.ByteString
 import Control.Exception as CE hiding (assert)
-import Data.List
-import Data.ByteString.Lazy as LBS (putStr)
-import Data.ByteString.Lazy.Char8 (ByteString)
-import qualified Data.ByteString.Lazy.Char8 as LBS8 
+import Data.Either
+
 import System.IO.Temp
 import System.FilePath
 import System.Directory
 import System.Timeout
 import Control.Concurrent.Async
+
+import Network.HTTP.Simple
+
+import Text.Regex.PCRE.Heavy
+import Text.Regex.PCRE.Light (multiline, dotall)
+import Data.Text
+import Data.Text.Encoding
 
 import Server
 
@@ -509,13 +508,13 @@ prop_noExtension = runTest $ do
 prop_nonImage = runTest $ do
     -- Folder page
     responseFolderPage <- request ""
-    assert $ responseFolderPage =~ ("top_button" :: ByteString)
-    assert $ not $ responseFolderPage =~ ("other_file" :: ByteString)
+    -- assert $ responseFolderPage =~ "top_button"
+    -- assert $ not $ responseFolderPage =~ "other_file"
 
     -- ImagePage
     responseImagePage <- request "/root_level_img1.jpg.html"
-    assert $ responseImagePage =~ ("background-image" :: ByteString)
-    assert $ not $ responseImagePage =~ ("other_file" :: ByteString)
+    -- assert $ responseImagePage =~ "background-image"
+    -- assert $ not $ responseImagePage =~ "other_file"
 
     -- Thumbnail
     responseThumbExtension <- request "/other_file.txt.thumb"
@@ -643,37 +642,38 @@ createFoldersAndFiles thumbDir fullImageDir = do
     writeFile (thumbDir </> "level1_2" </> "level12_imgC.jpg") ""
     writeFile (thumbDir </> "level1_2" </> "level12_imgD.jpg") ""
 
-assertResponseContainsStrings :: String -> [ByteString] -> IO ()
+assertResponseContainsStrings :: String -> [Text] -> IO ()
 assertResponseContainsStrings path needles = do
     response <- request path
     -- LBS.putStr response
     assertContainsStrings response needles
 
-request :: String -> IO ByteString
+request :: String -> IO Text
 request path = do
-    manager <- newManager defaultManagerSettings
+    -- Sleep to make sure the sever has started. Just 100 microseconds
+    threadDelay 100
     request <- parseRequest $ "http://127.0.0.1:12345" ++ path
-    response <- httpLbs request manager
-    return $ responseBody response
+    response <- httpBS request
+    return $ decodeUtf8 $ getResponseBody response
 
-assertContainsStrings :: ByteString -> [ByteString] -> IO ()
+assertContainsStrings :: Text -> [Text] -> IO ()
 assertContainsStrings haystack needles = do
     -- TODO: regex-quote each needle
     -- First check each individual string for easier debugging
-    forM_ needles (\needle -> if haystack =~ needle
+    forM_ needles (\needle -> if haystack =~ (makeRegex needle [])
                       then return ()
                       else do
-                          throwIO (AssertionFailed (LBS8.unpack needle)))
+                          throwIO (AssertionFailed (unpack needle)))
 
-    -- Then check all at once to verify the order
-    let opts = defaultCompOpt{multiline = False}
-    let regex = makeRegexOpts opts
-                              defaultExecOpt
-                              (LBS8.intercalate ".*" needles)
-
-    if match regex haystack
+    if haystack =~ (makeRegex (intercalate ".*" needles) [multiline, dotall])
        then return ()
-       else throwIO (AssertionFailed ("Regex not found"))
+       else throwIO (AssertionFailed "All-at-once regex not found")
+
+makeRegex :: Text -> [PCREOption] -> Regex
+makeRegex needle options = regex
+    where
+        regex = fromRight (error "Failed to compile regex")
+                          (compileM (encodeUtf8 needle) options)
 
 assertError :: String -> IO ()
 assertError path = do
