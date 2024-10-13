@@ -8,7 +8,6 @@ import Test.QuickCheck
 import Test.QuickCheck.Monadic hiding (assert)
 import Control.Concurrent
 import Control.Monad
-import Control.Exception as CE hiding (assert)
 import Data.Either
 
 import System.IO.Temp
@@ -717,11 +716,11 @@ assertContainsStrings haystack needles = do
     forM_ escapedNeedles (\needle -> if haystack =~ makeRegex needle
                       then return ()
                       else do
-                          throwIO (AssertionFailed (unpack needle)))
+                          error $ unpack needle)
 
     if haystack =~ (makeRegexMultiline $ intercalate ".*" escapedNeedles)
        then return ()
-       else throwIO (AssertionFailed "All-at-once regex not found")
+       else error $ "All-at-once regex not found"
 
 makeRegex :: Text -> Regex
 makeRegex needle = makeRegexOpts needle []
@@ -749,7 +748,7 @@ assertError path = do
 
 assert :: Bool -> IO ()
 assert True = return ()
-assert False = throwIO (AssertionFailed "assert function")
+assert False = error "assert function"
 
 
 return []
