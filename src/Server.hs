@@ -35,7 +35,7 @@ main = do
     mainWithArgs thumbRoot fullRoot port
 
 mainTest :: IO ()
-mainTest = mainWithArgs "test/Thumbs" "test/Thumbs" 3000
+mainTest = mainWithArgs "Test/Thumbs" "Test/Thumbs" 3000
 
 mainWithArgs :: String -> String -> Int -> IO ()
 mainWithArgs thumbRoot fullRoot port = do
