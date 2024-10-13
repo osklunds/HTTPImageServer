@@ -79,11 +79,6 @@ prop_folderPage_root = runTest $ do
         "/root_level_img2.jpg.thumb"
         ]
 
-    response <- request ""
-    -- Checking that no non-images are included
-    assert $ response =~ ("top_button" :: ByteString)
-    assert $ not $ response =~ ("other_file" :: ByteString)
-    
     return ()
 
 prop_folderPage_level1 = runTest $ do
@@ -508,6 +503,29 @@ prop_incorrectExtension = runTest $ do
 prop_noExtension = runTest $ do
     assertError "/something.noExtension"
 
+prop_nonImage = runTest $ do
+    -- Folder page
+    responseFolderPage <- request ""
+    assert $ responseFolderPage =~ ("top_button" :: ByteString)
+    assert $ not $ responseFolderPage =~ ("other_file" :: ByteString)
+
+    -- ImagePage
+    responseImagePage <- request "/root_level_img1.jpg.html"
+    assert $ responseImagePage =~ ("background-image" :: ByteString)
+    assert $ not $ responseImagePage =~ ("other_file" :: ByteString)
+
+    -- Thumbnail
+    responseThumbExtension <- request "/other_file.txt.thumb"
+    assertContainsStrings responseThumbExtension ["^other_file_content$"]
+    responseThumbNoExtension <- request "/other_file_no_extension.thumb"
+    assertContainsStrings responseThumbNoExtension ["^other_file_no_extension_content$"]
+
+    -- Full image
+    responseFullExtension <- request "/other_file.txt.full"
+    assertContainsStrings responseFullExtension ["^other_file_content$"]
+    responseFullNoExtension <- request "/other_file_no_extension.full"
+    assertContainsStrings responseFullNoExtension ["^other_file_no_extension_content$"]
+
 --------------------------------------------------------------------------------
 -- Helpers
 --------------------------------------------------------------------------------
@@ -550,14 +568,18 @@ createFoldersAndFiles thumbDir fullImageDir = do
               "content_of_root_level_img1_thumb"
     writeFile (thumbDir </> "root_level_img2.jpg")
               "content_of_root_level_img2_thumb"
+    writeFile (thumbDir </> "other_file.txt")
+              "other_file_content"
+    writeFile (thumbDir </> "other_file_no_extension")
+              "other_file_no_extension_content"
+
     writeFile (fullImageDir </> "root_level_img1.jpg")
               "content_of_root_level_img1_full"
     writeFile (fullImageDir </> "root_level_img2.jpg")
               "content_of_root_level_img2_full"
-
-    writeFile (thumbDir </> "other_file.txt")
+    writeFile (fullImageDir </> "other_file.txt")
               "other_file_content"
-    writeFile (thumbDir </> "other_file_no_extension")
+    writeFile (fullImageDir </> "other_file_no_extension")
               "other_file_no_extension_content"
 
     -- Images in level 1
@@ -617,10 +639,6 @@ createFoldersAndFiles thumbDir fullImageDir = do
     writeFile (thumbDir </> "level1_2" </> "level12_imgB.jpg") ""
     writeFile (thumbDir </> "level1_2" </> "level12_imgC.jpg") ""
     writeFile (thumbDir </> "level1_2" </> "level12_imgD.jpg") ""
-
--- TODO: Non images
-
-
 
 assertResponseContainsStrings :: String -> [ByteString] -> IO ()
 assertResponseContainsStrings path needles = do
