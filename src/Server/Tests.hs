@@ -763,6 +763,14 @@ assert404NotFound path = do
     assertEquals "" response
     assertEquals status404 status
 
+    -- To see that the server still works afterwards
+    assertResponseContainsStrings "" [
+        "<div class=\"top_button\" height=\"30px\" >\n\
+        \/\n\
+        \\n\
+        \</div>"
+       ]
+
 assert :: Bool -> IO ()
 assert True = return ()
 assert False = error "assert function"
