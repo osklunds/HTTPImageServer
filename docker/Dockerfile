@@ -30,8 +30,11 @@ RUN cd dist-newstyle/build/*/ghc-9.10.1/HTTPImageServer-0.1.0.0/x/HTTPImageServe
 ### The actual image
 FROM debian:bookworm-slim
 
+ENV LANG C.UTF-8
+
 COPY --from=builder /usr/src/HTTPImageServer.bin /usr/local/bin/HTTPImageServer
 RUN apt-get update -y && apt-get install -y curl libpcre3 libpcre3-dev
+
 COPY docker/run.sh .
 COPY docker/healthcheck.sh .
 COPY docker/common.sh .
