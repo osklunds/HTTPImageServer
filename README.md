@@ -80,4 +80,3 @@ For information and an example on how to run `HTTPImageServer` containers with `
 - Swipe navigation
 - Calculate position when going to parent rather than saving
 - Flicker-free switching (by using javascript or AJAX?)
-- Handle favicon request without error message

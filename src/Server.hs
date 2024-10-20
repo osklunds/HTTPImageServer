@@ -46,11 +46,15 @@ app :: String -> String -> MVar Cache -> Application
 app thumbRoot fullRoot cache request respond = do
     let state = makeState thumbRoot fullRoot cache
     let path = joinPath $ map unpack $ pathInfo request
-    (page, pageType) <- handleRequest state path
+    result <- handleRequest state path
 
-    let httpHeaders = case pageType of
-                            Image ->
-                                [(hCacheControl, "public, max-age=31536000")]
-                            Navigation ->
-                                [(hCacheControl, "public, max-age=600")]
-    respond $ responseBuilder status200 httpHeaders $ copyByteString $ page
+    case result of
+        Just (page, pageType) -> do
+            let httpHeaders = case pageType of
+                                    Image ->
+                                        [(hCacheControl, "public, max-age=31536000")]
+                                    Navigation ->
+                                        [(hCacheControl, "public, max-age=600")]
+            respond $ responseBuilder status200 httpHeaders $ copyByteString $ page
+        Nothing ->
+            respond $ responseBuilder status404 [] ""
