@@ -16,6 +16,7 @@ import System.Directory
 import Control.Concurrent.Async
 
 import Network.HTTP.Simple
+import Network.HTTP.Types.Status
 
 import Text.Regex.PCRE.Heavy
 import Text.Regex.PCRE.Light (multiline, dotall)
@@ -534,10 +535,10 @@ prop_fullImage_specialChars = runTest $ do
                          "full_åäöあabc_full"
 
 prop_incorrectExtension = runTest $ do
-    assertError "/something.incorrectExtension"
+    assert404NotFound "/something.incorrectExtension"
 
 prop_noExtension = runTest $ do
-    assertError "/something.noExtension"
+    assert404NotFound "/something.noExtension"
 
 prop_nonImage = runTest $ do
     -- Folder page
@@ -696,17 +697,27 @@ assertResponseContainsStrings path needles = do
 assertResponseIsText :: String -> Text -> IO ()
 assertResponseIsText path text = do
     response <- request path
-    if response == text
-       then return ()
-       else error $ "Exp: '" ++ show text ++ "' Act: '" ++ show response ++ "'"
+    assertEquals text response
 
-request :: String -> IO Text
-request path = do
+assertEquals :: (Show a, Eq a) => a -> a -> IO ()
+assertEquals exp act = do
+    if exp == act
+       then return ()
+       else error $ "Exp: '" ++ show exp ++ "' Act: '" ++ show act ++ "'"
+
+requestWithStatus :: String -> IO (Text, Status)
+requestWithStatus path = do
     -- Sleep to make sure the sever has started. Just 100 microseconds
     threadDelay 100
     request <- parseRequest $ "http://127.0.0.1:12345" ++ path
     response <- httpBS request
-    return $ Text.decodeUtf8 $ getResponseBody response
+    return $ (Text.decodeUtf8 $ getResponseBody response,
+              getResponseStatus response)
+
+request :: String -> IO Text
+request path = do
+    (response, _status) <- requestWithStatus path
+    return response
 
 assertContainsStrings :: Text -> [Text] -> IO ()
 assertContainsStrings haystack needles = do
@@ -745,6 +756,12 @@ assertError path = do
         \\n\
         \</div>"
        ]
+
+assert404NotFound :: String -> IO ()
+assert404NotFound path = do
+    (response, status) <- requestWithStatus path
+    assertEquals "" response
+    assertEquals status404 status
 
 assert :: Bool -> IO ()
 assert True = return ()
