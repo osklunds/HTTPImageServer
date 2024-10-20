@@ -1,0 +1,16 @@
+# compose file used for development (building and testing)
+
+services:
+  http-image-server-dev:
+    image: osklunds/http-image-server-dev
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: http-image-server-dev
+    volumes:
+      - ../Test/Thumbs:/thumbnail:ro
+      - ../Test/Thumbs:/full:ro
+    ports:
+      - 8080:80
+    restart: unless-stopped
+    init: true
