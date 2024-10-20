@@ -8,8 +8,8 @@ services:
       dockerfile: docker/Dockerfile
     container_name: http-image-server-dev
     volumes:
-      - ../Test/Thumbs:/thumbnail
-      - ../Test/Thumbs:/full
+      - ../Test/Thumbs:/thumbnail:ro
+      - ../Test/Thumbs:/full:ro
     ports:
       - 8080:80
     restart: unless-stopped
