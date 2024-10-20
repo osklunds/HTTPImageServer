@@ -1,79 +1,16 @@
+# compose file used for development (building and testing)
+
 services:
-  thumbnail_mapper:
-    image: image-mapper
+  http-image-server-dev:
+    image: osklunds/http-image-server-dev
     build:
-      context: ./image-mapper
-      dockerfile: Dockerfile
-    container_name: thumbnail_mapper
-    environment:
-      - QUALITY=Thumbnail
-      - VIDEOS=false
-      - TIME=3600
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: http-image-server-dev
     volumes:
-        - /home/oskar/Bilder:/src:ro
-        - thumbnail_images:/dst
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-    init: true
-  mobile_mapper:
-    image: image-mapper
-    container_name: mobile_mapper
-    environment:
-      - QUALITY=Mobile
-      - VIDEOS=false
-      - TIME=3600
-    volumes:
-        - /home/oskar/Bilder:/src:ro
-        - mobile_images:/dst
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-    init: true
-  tv_mapper:
-    image: image-mapper
-    container_name: tv_mapper
-    environment:
-      - QUALITY=TV
-      - VIDEOS=false
-      - TIME=3600
-    volumes:
-        - /home/oskar/Bilder:/src:ro
-        - tv_images:/dst
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-    init: true
-  mobile_image_server:
-    image: image-server
-    build:
-      context: ./http-image-server
-      dockerfile: Dockerfile
-    container_name: mobile_image_server
-    volumes:
-      - thumbnail_images:/thumbnail
-      - mobile_images:/full
+      - ../Test/Thumbs:/thumbnail
+      - ../Test/Thumbs:/full
     ports:
       - 8080:80
     restart: unless-stopped
     init: true
-  tv_image_server:
-    image: image-server
-    container_name: tv_image_server
-    volumes:
-      - thumbnail_images:/thumbnail
-      - tv_images:/full
-    ports:
-      - 8081:80
-    restart: unless-stopped
-    init: true
-volumes:
-  thumbnail_images:
-  mobile_images:
-  tv_images:
