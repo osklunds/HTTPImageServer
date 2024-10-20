@@ -23,6 +23,7 @@ executable HTTPImageServer
     "-Wno-missing-home-modules"
     -O2
     -freverse-errors
+    -threaded
   other-modules:
     HTMLGen,
     RequestHandler
