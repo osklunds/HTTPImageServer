@@ -16,7 +16,6 @@ RUN cabal build --ghc-options="-fobject-code -O2" || exit 0
 COPY src src
 COPY Test Test
 COPY html html
-RUN ls
 RUN cabal build --ghc-options="-fobject-code -O2"
 
 # Run tests inside a docker environment
