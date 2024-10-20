@@ -33,7 +33,7 @@ FROM debian:bookworm-slim
 ENV LANG C.UTF-8
 
 COPY --from=builder /usr/src/HTTPImageServer.bin /usr/local/bin/HTTPImageServer
-RUN apt-get update -y && apt-get install -y curl libpcre3 libpcre3-dev
+RUN apt-get update -y && apt-get install -y curl libpcre3
 
 COPY docker/run.sh .
 COPY docker/healthcheck.sh .
