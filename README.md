@@ -29,7 +29,7 @@ I actually use `HTTPImageServer` for real world use. I use `ImageMapper` to peri
 
 ## Starting the server
 
-`HTTPImageServer` is written in Haskell and this project is based on cabal. It has been tested on Mac and Linux. You need to [install the GHC toolchain](https://www.haskell.org/ghcup/) first if you haven't already.
+`HTTPImageServer` is written in Haskell and this project is based on cabal. It has been tested on Linux. You need to [install the GHC toolchain](https://www.haskell.org/ghcup/) first if you haven't already.
 
 Type `cabal repl` for a ghci-shell.
 
@@ -55,6 +55,24 @@ After starting the server, go to `127.0.0.1:port` to use it.
 - Press somewhere towards the right to move to the next photo.
 - Press somewhere towards the left to move to the previous photo.
 - Press somewhere towards the top to move back to the grid view.
+
+## Compatibility
+
+I have developed and tested `HTTPImageServer` on Linux and Docker. It might work on Mac too, but probably not on Windows.
+
+## Docker
+
+A Docker version of `HTTPImageServer` exists in the `docker` folder. Some helpful commands to run inside the `docker` folder:
+
+- `docker compose build` to build.
+
+- `docker compose up` to run.
+
+- `./build-tag-and-save-image.sh` to build, tag and save the built image in one go. The saved image can be loaded into wherever you want to run your Docker containers.
+
+`docker-compose.yaml` is used during development for easy building and testing. It also serves as documentation of the volumes needed when running the container. It can be used as a reference when you create your own compose file.
+
+For information and an example on how to run `HTTPImageServer` containers with `ImageMapper` containers, check [the ImageMapper repository](https://github.com/osklunds/ImageMapper).
 
 ## TODOs
 
