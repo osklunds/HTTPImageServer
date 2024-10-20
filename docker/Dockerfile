@@ -40,6 +40,6 @@ COPY docker/healthcheck.sh .
 COPY docker/common.sh .
 CMD ["./run.sh"]
 
-HEALTHCHECK CMD "./healthcheck.sh"
+HEALTHCHECK --start-interval=1s --start-period=5s CMD "./healthcheck.sh"
 
 EXPOSE 80
