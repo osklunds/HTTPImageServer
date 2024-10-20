@@ -1,6 +1,5 @@
 #!/bin/bash
 
-cd ..
 output="$(cabal repl 2>&1 <<EOF
 :l Server.Tests
 runTests
@@ -16,6 +15,7 @@ elif [[ "$output" =~ "False"$nl"ghci> Leaving GHCi." ]]; then
     exit 1
 else
     echo "Couldn't match output"
+    echo "$output"
     exit 1
 fi
 

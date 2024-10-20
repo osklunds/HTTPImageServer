@@ -19,6 +19,10 @@ COPY html html
 RUN ls
 RUN cabal build --ghc-options="-fobject-code -O2"
 
+# Run tests inside a docker environment
+COPY docker/run_tests.sh .
+RUN ./run_tests.sh
+
 # Workaround since project incorrectly assumes cwd, meaning cabal install
 # doesn't work
 RUN cd dist-newstyle/build/*/ghc-9.10.1/HTTPImageServer-0.1.0.0/x/HTTPImageServer/build/HTTPImageServer && cp HTTPImageServer /usr/src/HTTPImageServer.bin
